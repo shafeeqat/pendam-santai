@@ -66,10 +66,44 @@
     ::-webkit-scrollbar-thumb { background: #353436; border-radius: 10px; }
     .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
     .no-scrollbar::-webkit-scrollbar { display:none; }
-    /* day cell base — avoids Tailwind purge for dynamically set classes */
     .day-cell { aspect-ratio:1/1; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:0.5rem; transition:all 0.15s; position:relative; overflow:hidden; }
     .heat-cell { aspect-ratio:1/1; display:flex; flex-direction:column; justify-content:space-between; padding:0.35rem; border-radius:0.5rem; cursor:pointer; transition:all 0.2s; }
     @media(min-width:768px) { .heat-cell { padding:0.6rem; } }
+
+    /* Notification panel */
+    #notif-panel { position:fixed; right:0; top:0; height:100vh; width:360px; max-width:100vw; background:#1a1a1b; border-left:1px solid rgba(80,69,59,0.3); z-index:300; transform:translateX(110%); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; box-shadow:-8px 0 32px rgba(0,0,0,0.4); }
+    @media(max-width:639px) { #notif-panel { width:100vw; border-left:none; } }
+    #notif-panel.open { transform:translateX(0); }
+    #notif-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:299; display:none; backdrop-filter:blur(2px); }
+    #notif-backdrop.open { display:block; }
+
+    /* Pending confirmation bar */
+    #pending-bar { position:fixed; bottom:0; left:0; right:0; z-index:60; background:#1a1a1b; border-top:1px solid rgba(242,190,140,0.25); transform:translateY(110%); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+    @media(max-width:767px) { #pending-bar { bottom:64px; } }
+    @media(min-width:768px) { #pending-bar { left:256px; } }
+    #pending-bar.open { transform:translateY(0); }
+
+    /* Lepak modal — centered on desktop, bottom-sheet on mobile */
+    #lepak-modal { position:fixed; inset:0; z-index:400; display:none; align-items:center; justify-content:center; padding:1rem; background:rgba(0,0,0,0.75); backdrop-filter:blur(6px); }
+    #lepak-modal.open { display:flex; }
+    .modal-box { background:#1a1a1b; border:1px solid rgba(255,255,255,0.08); border-radius:0.75rem; width:100%; max-width:480px; max-height:88vh; overflow-y:auto; }
+    @media(max-width:639px) {
+      #lepak-modal { align-items:flex-end; padding:0; }
+      .modal-box { border-radius:1.25rem 1.25rem 0 0; max-width:100%; max-height:92vh; border-bottom:none; }
+    }
+
+    /* Notification badge */
+    .notif-badge { position:absolute; top:5px; right:5px; min-width:16px; height:16px; background:#f2be8c; color:#482904; font-size:9px; font-weight:900; border-radius:99px; display:flex; align-items:center; justify-content:center; padding:0 3px; pointer-events:none; line-height:1; }
+
+    /* Mobile nav — active indicator pill */
+    .mob-nav.mob-active { color:#f2be8c; }
+    .mob-nav .mob-dot { width:4px; height:4px; border-radius:50%; background:#f2be8c; display:none; margin:0 auto; }
+    .mob-nav.mob-active .mob-dot { display:block; }
+
+    /* Mobile section — reduce top padding */
+    @media(max-width:767px) {
+      .mob-section { padding-top: 1rem; padding-bottom: 1rem; gap: 1rem; }
+    }
   </style>
 </head>
 <body class="dark min-h-screen">
@@ -79,19 +113,38 @@
   ⚠️ Firebase not configured — update <code class="bg-black/20 px-1.5 py-0.5 rounded">firebaseConfig</code> in the &lt;script&gt; at the bottom of this file before deploying.
 </div>
 
+<!-- ── Notification Backdrop ─────────────────────────────────────────────── -->
+<div id="notif-backdrop"></div>
+
+<!-- ── Notification Panel ─────────────────────────────────────────────────── -->
+<div id="notif-panel">
+  <div class="flex items-center justify-between px-5 py-4 border-b border-outline-variant/10 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <span class="material-symbols-outlined text-primary text-xl">notifications</span>
+      <span class="font-headline font-bold text-on-surface">Notifications</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button id="notif-mark-read" class="text-[10px] text-outline hover:text-primary transition-colors font-bold uppercase tracking-wider">Mark all read</button>
+      <button id="notif-close" class="text-outline hover:text-primary transition-colors p-1.5 rounded-full hover:bg-surface-container">
+        <span class="material-symbols-outlined text-xl">close</span>
+      </button>
+    </div>
+  </div>
+  <div id="notif-list" class="flex-1 overflow-y-auto px-2 py-2"></div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════════════════════════
      LOGIN VIEW
      ══════════════════════════════════════════════════════════════════════════ -->
-<div id="login-view" class="min-h-screen flex items-center justify-center p-6 selection:bg-primary selection:text-on-primary">
+<div id="login-view" class="min-h-screen flex items-center justify-center px-5 py-10 selection:bg-primary selection:text-on-primary">
   <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-16 items-center">
 
-    <!-- Left: Branding -->
-    <div class="lg:col-span-7 mb-12 lg:mb-0 space-y-10">
-      <div class="space-y-4">
+    <div class="lg:col-span-7 mb-8 lg:mb-0 space-y-8">
+      <div class="space-y-3 text-center lg:text-left">
         <h1 class="text-4xl sm:text-6xl md:text-8xl font-headline font-extrabold tracking-tighter text-on-surface leading-none">
           Pendam<span class="text-primary">.Santai</span>
         </h1>
-        <p class="text-xl md:text-2xl font-body text-on-surface-variant max-w-lg font-light tracking-tight">
+        <p class="text-base sm:text-xl md:text-2xl font-body text-on-surface-variant font-light tracking-tight">
           Sebab "Next Week On" Selalunya Scam.
         </p>
       </div>
@@ -116,7 +169,6 @@
       </div>
     </div>
 
-    <!-- Right: Sign-in panel -->
     <div class="lg:col-span-5">
       <div class="glass-panel p-8 md:p-14 rounded-xl editorial-shadow border border-white/10 relative overflow-hidden">
         <div class="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -126,7 +178,6 @@
             Sign in to mark your free days and see when the whole team is available.
           </p>
         </header>
-
         <button id="signin-btn" class="w-full flex items-center justify-center gap-4 py-5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/30 rounded-xl transition-all active:scale-[0.98] font-body font-semibold text-on-surface tracking-wide">
           <svg width="20" height="20" viewBox="0 0 18 18" aria-hidden="true">
             <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.717v2.258h2.908C16.658 14.013 17.64 11.706 17.64 9.2z" fill="#4285F4"/>
@@ -136,13 +187,11 @@
           </svg>
           Continue with Google
         </button>
-
         <div class="mt-10 flex items-center gap-4">
           <div class="h-[1px] flex-1 bg-outline-variant/20"></div>
           <span class="text-[10px] font-label uppercase tracking-[0.3em] text-outline">Team Access Only</span>
           <div class="h-[1px] flex-1 bg-outline-variant/20"></div>
         </div>
-
         <div class="mt-8 flex items-center justify-center gap-3">
           <div class="w-2 h-2 rounded-full bg-tertiary animate-pulse shadow-[0_0_12px_rgba(193,206,145,0.4)]"></div>
           <span class="text-xs font-body text-on-surface-variant tracking-wide">Systems Operational</span>
@@ -158,13 +207,12 @@
      ══════════════════════════════════════════════════════════════════════════ -->
 <div id="app-view" style="display:none" class="min-h-screen">
 
-  <!-- Sidebar (desktop) -->
+  <!-- Sidebar -->
   <aside class="hidden md:flex h-screen w-64 fixed left-0 top-0 flex-col p-4 gap-8 bg-[#0E0E0F] z-50 border-r border-outline-variant/10 editorial-shadow">
     <div class="flex flex-col gap-1 px-2 pt-1">
       <span class="text-primary font-black uppercase tracking-[0.1em] text-xs">Midnight Coffee</span>
       <span class="text-[#353436] text-[10px] uppercase font-bold tracking-widest">The Digital Speakeasy</span>
     </div>
-
     <nav class="flex flex-col gap-1.5 flex-grow">
       <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer text-outline hover:text-primary hover:bg-surface-container/60" data-view="availability">
         <span class="material-symbols-outlined text-xl">person_check</span>
@@ -178,9 +226,11 @@
         <span class="material-symbols-outlined text-xl">schedule</span>
         <span class="text-sm tracking-wide">Daily Detail</span>
       </a>
+      <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer text-outline hover:text-primary hover:bg-surface-container/60" data-view="sessions">
+        <span class="material-symbols-outlined text-xl">celebration</span>
+        <span class="text-sm tracking-wide">Lepak Sessions</span>
+      </a>
     </nav>
-
-    <!-- User profile -->
     <div class="mt-auto flex flex-col gap-3 pt-4 border-t border-outline-variant/10">
       <div class="flex items-center gap-3 px-2">
         <div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30 flex-shrink-0 bg-surface-container flex items-center justify-center">
@@ -206,9 +256,12 @@
     <header class="sticky top-0 z-40 bg-background/95 backdrop-blur-md flex justify-between items-center px-5 md:px-8 py-4 md:py-5 border-b border-outline-variant/10">
       <h1 class="font-headline text-lg md:text-2xl font-bold tracking-tighter text-primary">Pendam.Santai</h1>
       <div class="flex items-center gap-3 md:gap-4">
-        <button class="text-outline hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container">
-          <span class="material-symbols-outlined text-xl">notifications</span>
-        </button>
+        <div class="relative">
+          <button id="notif-btn" class="text-outline hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container">
+            <span class="material-symbols-outlined text-xl">notifications</span>
+          </button>
+          <span id="notif-badge" style="display:none" class="notif-badge">0</span>
+        </div>
         <div class="w-9 h-9 rounded-full overflow-hidden border border-outline-variant/20 bg-surface-container flex items-center justify-center cursor-pointer" title="Signed in">
           <img id="hdr-photo" class="w-full h-full object-cover" src="" alt="Profile" onerror="this.style.display='none';document.getElementById('hdr-initials').style.display='flex'"/>
           <span id="hdr-initials" style="display:none" class="text-[10px] font-bold text-primary w-full h-full flex items-center justify-center"></span>
@@ -217,28 +270,46 @@
     </header>
 
     <!-- ─── MY AVAILABILITY ──────────────────────────────────────────────────── -->
-    <section id="availability-view" class="px-4 md:px-8 py-6 flex flex-col gap-6 md:gap-8 max-w-7xl w-full">
+    <section id="availability-view" class="px-4 md:px-8 py-4 md:py-6 flex flex-col gap-4 md:gap-8 max-w-7xl w-full">
 
-      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <!-- Upcoming Lepak Banner -->
+      <div id="upcoming-lepak-card" style="display:none" class="bg-primary/5 rounded-xl p-4 border border-primary/15"></div>
+
+      <!-- Mobile: compact inline month nav -->
+      <div class="flex items-center justify-between md:hidden">
+        <button id="av-prev" class="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline active:bg-surface-container transition-all">
+          <span class="material-symbols-outlined text-xl">chevron_left</span>
+        </button>
+        <div class="text-center">
+          <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-outline">My Availability</p>
+          <h2 class="font-headline text-xl font-extrabold tracking-tight leading-tight">
+            <span id="av-month"></span> <span class="text-primary/50 text-base font-bold" id="av-year"></span>
+          </h2>
+        </div>
+        <button id="av-next" class="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline active:bg-surface-container transition-all">
+          <span class="material-symbols-outlined text-xl">chevron_right</span>
+        </button>
+      </div>
+
+      <!-- Desktop: editorial header -->
+      <div class="hidden md:flex md:flex-row md:items-end justify-between gap-4">
         <div>
           <span class="font-label text-[10px] tracking-[0.2em] text-outline font-bold uppercase">Personal Schedule</span>
-          <h2 class="font-headline text-4xl md:text-5xl font-extrabold tracking-tight mt-1">
-            <span id="av-month"></span> <span class="text-primary/40" id="av-year"></span>
+          <h2 class="font-headline text-5xl font-extrabold tracking-tight mt-1">
+            <span id="av-month-d"></span> <span class="text-primary/40" id="av-year-d"></span>
           </h2>
         </div>
         <div class="flex items-center gap-2">
-          <button id="av-prev" class="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline hover:text-primary hover:border-primary/40 transition-all">
+          <button class="av-prev-d w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline hover:text-primary hover:border-primary/40 transition-all">
             <span class="material-symbols-outlined text-xl">chevron_left</span>
           </button>
-          <button id="av-next" class="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline hover:text-primary hover:border-primary/40 transition-all">
+          <button class="av-next-d w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline hover:text-primary hover:border-primary/40 transition-all">
             <span class="material-symbols-outlined text-xl">chevron_right</span>
           </button>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-        <!-- Calendar -->
         <div class="lg:col-span-8 bg-surface-container-low rounded-xl overflow-hidden">
           <div class="p-4 md:p-8">
             <div class="grid grid-cols-7 gap-1 md:gap-2 text-center pb-3 mb-3 border-b border-outline-variant/10">
@@ -254,18 +325,15 @@
           </div>
         </div>
 
-        <!-- Sidebar panel -->
         <div class="lg:col-span-4 flex flex-col gap-4">
-          <!-- Status card -->
           <div class="bg-primary/5 rounded-xl p-5 border border-primary/10">
             <div class="flex items-center justify-between mb-3">
               <span class="text-xs font-bold tracking-widest text-primary uppercase">Your Status</span>
               <span class="material-symbols-outlined text-primary text-sm">auto_awesome</span>
             </div>
             <p class="font-headline font-bold leading-tight text-on-surface" id="av-status-txt">No free days set</p>
-            <p class="text-on-surface-variant text-sm mt-1" id="av-status-sub">Click any future weekday to mark yourself available.</p>
+            <p class="text-on-surface-variant text-sm mt-1" id="av-status-sub">Tap any future weekday to select, then confirm.</p>
           </div>
-          <!-- Upcoming free days -->
           <div class="bg-surface-container-low rounded-xl p-5">
             <h3 class="text-xs font-bold tracking-widest text-outline uppercase mb-4">Upcoming Free Days</h3>
             <div id="av-upcoming" class="flex flex-col"></div>
@@ -275,28 +343,44 @@
     </section>
 
     <!-- ─── TEAM HEATMAP ────────────────────────────────────────────────────── -->
-    <section id="heatmap-view" style="display:none" class="px-4 md:px-8 py-6 flex flex-col gap-6 md:gap-8 max-w-7xl w-full">
+    <section id="heatmap-view" style="display:none" class="px-4 md:px-8 py-4 md:py-6 flex flex-col gap-4 md:gap-8 max-w-7xl w-full">
 
-      <div class="flex flex-col md:flex-row justify-between items-end gap-4 md:gap-6">
-        <div>
-          <h2 class="font-headline text-4xl md:text-6xl font-extrabold tracking-tighter text-on-surface leading-none">
-            <span id="ht-month"></span> <span class="text-primary/40" id="ht-year"></span>
+      <!-- Mobile: compact inline month nav -->
+      <div class="flex items-center justify-between md:hidden">
+        <button id="ht-prev" class="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline active:bg-surface-container transition-all">
+          <span class="material-symbols-outlined text-xl">chevron_left</span>
+        </button>
+        <div class="text-center">
+          <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-outline">Team Heatmap</p>
+          <h2 class="font-headline text-xl font-extrabold tracking-tight leading-tight">
+            <span id="ht-month"></span> <span class="text-primary/50 text-base font-bold" id="ht-year"></span>
           </h2>
-          <p class="text-on-surface-variant text-sm mt-2 max-w-md leading-relaxed hidden md:block">
+        </div>
+        <button id="ht-next" class="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline active:bg-surface-container transition-all">
+          <span class="material-symbols-outlined text-xl">chevron_right</span>
+        </button>
+      </div>
+
+      <!-- Desktop: editorial header -->
+      <div class="hidden md:flex justify-between items-end gap-6">
+        <div>
+          <h2 class="font-headline text-6xl font-extrabold tracking-tighter text-on-surface leading-none">
+            <span id="ht-month-d"></span> <span class="text-primary/40" id="ht-year-d"></span>
+          </h2>
+          <p class="text-on-surface-variant text-sm mt-2 max-w-md leading-relaxed">
             Latte tones signal alignment opportunity. Darker = quiet.
           </p>
         </div>
-        <div class="flex items-center gap-2 md:gap-3">
-          <button id="ht-prev" class="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline hover:text-primary hover:border-primary/40 transition-all">
+        <div class="flex items-center gap-3">
+          <button class="ht-prev-d w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline hover:text-primary hover:border-primary/40 transition-all">
             <span class="material-symbols-outlined text-xl">chevron_left</span>
           </button>
-          <button id="ht-next" class="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline hover:text-primary hover:border-primary/40 transition-all">
+          <button class="ht-next-d w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline hover:text-primary hover:border-primary/40 transition-all">
             <span class="material-symbols-outlined text-xl">chevron_right</span>
           </button>
-          <!-- Legend -->
           <div class="flex flex-col items-end gap-1 ml-2">
             <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-outline">Density</span>
-            <div class="flex gap-0.5 h-2 w-24 md:w-32 rounded-full overflow-hidden">
+            <div class="flex gap-0.5 h-2 w-32 rounded-full overflow-hidden">
               <div class="flex-1" style="background:#1b1b1c"></div>
               <div class="flex-1" style="background:rgba(212,163,115,0.2)"></div>
               <div class="flex-1" style="background:rgba(212,163,115,0.5)"></div>
@@ -307,8 +391,6 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-        <!-- Heatmap calendar -->
         <div class="lg:col-span-8 bg-surface-container-low rounded-xl p-4 md:p-8 border border-outline-variant/5">
           <div class="grid grid-cols-7 gap-1 md:gap-3 mb-3 md:mb-5">
             <div class="text-[9px] md:text-[10px] font-bold text-outline uppercase tracking-widest text-center">Mon</div>
@@ -321,10 +403,7 @@
           </div>
           <div class="grid grid-cols-7 gap-1 md:gap-3" id="ht-grid"></div>
         </div>
-
-        <!-- Insight sidebar -->
         <div class="lg:col-span-4 flex flex-col gap-5">
-          <!-- Sync Point card -->
           <div class="bg-surface-container-highest p-6 md:p-8 rounded-xl border border-outline-variant/10">
             <span class="inline-block px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest rounded-md mb-4">Optimal Alignment</span>
             <h3 class="text-3xl md:text-4xl font-headline font-bold text-primary tracking-tighter" id="sp-date">–</h3>
@@ -334,7 +413,6 @@
               View This Day
             </button>
           </div>
-          <!-- Overlap bar -->
           <div class="bg-surface-container-low p-5 rounded-xl border border-outline-variant/10">
             <div class="flex items-center gap-3 mb-4">
               <span class="material-symbols-outlined text-tertiary text-sm">auto_awesome</span>
@@ -352,55 +430,80 @@
             </div>
           </div>
         </div>
-
-        <!-- Bandwidth details list -->
         <div class="lg:col-span-12 mt-2">
           <h3 class="text-lg font-headline font-semibold mb-4 text-on-surface">Best Days This Month</h3>
           <div id="ht-list" class="space-y-3"></div>
         </div>
-
       </div>
     </section>
 
     <!-- ─── DAILY DETAIL ─────────────────────────────────────────────────────── -->
-    <section id="daily-view" style="display:none" class="px-4 md:px-8 py-6 flex flex-col gap-6 max-w-7xl w-full">
+    <section id="daily-view" style="display:none" class="px-4 md:px-8 py-4 md:py-6 flex flex-col gap-4 md:gap-6 max-w-7xl w-full">
 
-      <!-- Hero date -->
-      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
+      <!-- Mobile: compact date header -->
+      <div class="md:hidden">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-outline">Daily Detail</p>
+            <h2 class="font-headline text-xl font-extrabold tracking-tight text-on-surface leading-tight">
+              <span id="dd-dayname"></span>, <span class="text-primary/50" id="dd-datestr"></span>
+            </h2>
+          </div>
+          <div class="flex gap-2">
+            <div class="bg-tertiary/10 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+              <span class="text-[10px] text-tertiary font-bold uppercase tracking-widest">Free</span>
+              <span class="text-lg font-headline font-bold text-tertiary" id="dd-free">0</span>
+            </div>
+            <div class="bg-surface-container px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+              <span class="text-[10px] text-outline font-bold uppercase tracking-widest">Unset</span>
+              <span class="text-lg font-headline font-bold text-secondary" id="dd-unset">0</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="dd-prev" class="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl border border-outline-variant/30 active:bg-surface-container text-outline text-xs font-bold uppercase tracking-wider transition-all">
+            <span class="material-symbols-outlined text-base">chevron_left</span> Prev
+          </button>
+          <button id="dd-today" class="flex-1 py-2.5 rounded-xl border border-outline-variant/30 active:bg-surface-container text-outline text-xs font-bold uppercase tracking-wider transition-all">
+            Today
+          </button>
+          <button id="dd-next" class="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl border border-outline-variant/30 active:bg-surface-container text-outline text-xs font-bold uppercase tracking-wider transition-all">
+            Next <span class="material-symbols-outlined text-base">chevron_right</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Desktop: editorial header -->
+      <div class="hidden md:flex md:flex-row md:items-end justify-between gap-6">
         <div>
           <p class="text-primary font-label text-xs tracking-[0.2em] uppercase mb-2 font-bold">Current Focus</p>
-          <h2 class="font-headline text-5xl md:text-7xl font-extrabold tracking-tighter text-on-surface leading-none">
-            <span id="dd-dayname"></span>,<br/><span class="text-primary/40" id="dd-datestr"></span>
+          <h2 class="font-headline text-7xl font-extrabold tracking-tighter text-on-surface leading-none">
+            <span id="dd-dayname-d"></span>,<br/><span class="text-primary/40" id="dd-datestr-d"></span>
           </h2>
         </div>
         <div class="flex gap-3">
           <div class="bg-surface-container-low p-4 rounded-xl flex flex-col items-center min-w-[72px]">
             <span class="text-[10px] text-on-surface-variant font-bold tracking-widest uppercase">Free</span>
-            <span class="text-3xl font-headline font-bold text-tertiary" id="dd-free">0</span>
+            <span class="text-3xl font-headline font-bold text-tertiary" id="dd-free-d">0</span>
           </div>
           <div class="bg-surface-container-low p-4 rounded-xl flex flex-col items-center min-w-[72px]">
             <span class="text-[10px] text-on-surface-variant font-bold tracking-widest uppercase">Unset</span>
-            <span class="text-3xl font-headline font-bold text-secondary" id="dd-unset">0</span>
+            <span class="text-3xl font-headline font-bold text-secondary" id="dd-unset-d">0</span>
           </div>
         </div>
       </div>
-
-      <!-- Day navigation -->
-      <div class="flex items-center gap-2">
-        <button id="dd-prev" class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-outline-variant/30 hover:border-primary/40 text-outline hover:text-primary transition-all text-xs font-bold uppercase tracking-wider">
+      <div class="hidden md:flex items-center gap-2">
+        <button class="dd-prev-d flex items-center gap-1.5 px-3 py-2 rounded-lg border border-outline-variant/30 hover:border-primary/40 text-outline hover:text-primary transition-all text-xs font-bold uppercase tracking-wider">
           <span class="material-symbols-outlined text-base">chevron_left</span> Prev
         </button>
-        <button id="dd-today" class="px-3 py-2 rounded-lg border border-outline-variant/30 hover:border-primary/40 text-outline hover:text-primary transition-all text-xs font-bold uppercase tracking-wider">
+        <button class="dd-today-d px-3 py-2 rounded-lg border border-outline-variant/30 hover:border-primary/40 text-outline hover:text-primary transition-all text-xs font-bold uppercase tracking-wider">
           Today
         </button>
-        <button id="dd-next" class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-outline-variant/30 hover:border-primary/40 text-outline hover:text-primary transition-all text-xs font-bold uppercase tracking-wider">
+        <button class="dd-next-d flex items-center gap-1.5 px-3 py-2 rounded-lg border border-outline-variant/30 hover:border-primary/40 text-outline hover:text-primary transition-all text-xs font-bold uppercase tracking-wider">
           Next <span class="material-symbols-outlined text-base">chevron_right</span>
         </button>
       </div>
-
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <!-- Colleague list -->
         <div class="lg:col-span-2 flex flex-col gap-4">
           <div class="flex justify-between items-center px-1">
             <h3 class="text-lg font-headline font-bold tracking-tight">Team Availability</h3>
@@ -415,15 +518,11 @@
           </div>
           <div id="dd-list" class="flex flex-col gap-3"></div>
         </div>
-
-        <!-- Side widgets -->
         <div class="flex flex-col gap-4">
-          <!-- Time distribution -->
           <div class="bg-surface-container p-5 md:p-6 rounded-xl border border-outline-variant/10">
             <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-primary mb-5">Day Overview</h3>
             <div class="flex flex-col gap-5" id="dd-timedist"></div>
           </div>
-          <!-- Daily brew -->
           <div class="bg-primary/5 p-5 md:p-6 rounded-xl border border-primary/10">
             <div class="flex items-center gap-3 mb-3">
               <span class="material-symbols-outlined text-primary text-sm">coffee</span>
@@ -432,38 +531,103 @@
             <p class="text-sm italic text-on-surface-variant leading-relaxed" id="dd-brew">Loading…</p>
           </div>
         </div>
-
       </div>
+    </section>
+
+    <!-- ─── LEPAK SESSIONS ───────────────────────────────────────────────────── -->
+    <section id="sessions-view" style="display:none" class="px-4 md:px-8 py-4 md:py-6 flex flex-col gap-4 md:gap-6 max-w-7xl w-full">
+      <div class="flex items-center justify-between gap-4">
+        <div>
+          <span class="hidden md:block font-label text-[10px] tracking-[0.2em] text-outline font-bold uppercase">Planned Meetups</span>
+          <h2 class="font-headline text-xl md:text-5xl font-extrabold tracking-tight md:mt-1 text-on-surface">
+            Lepak<span class="text-primary"> Sessions</span>
+          </h2>
+        </div>
+        <button id="open-lepak-modal" class="flex items-center gap-1.5 px-4 py-2.5 md:px-5 md:py-3 bg-primary text-on-primary font-bold text-sm rounded-xl hover:opacity-90 active:scale-95 transition-all flex-shrink-0">
+          <span class="material-symbols-outlined text-base">add</span>
+          <span class="hidden sm:inline">Initiate </span>Lepak
+        </button>
+      </div>
+      <div id="sessions-list" class="flex flex-col gap-3 md:gap-4"></div>
     </section>
 
   </main>
 
   <!-- Mobile bottom nav -->
-  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[#1F1F20]/95 backdrop-blur-md flex justify-around items-center py-3 px-2 z-50 border-t border-outline-variant/10">
-    <a class="mob-nav flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-all cursor-pointer" data-view="availability">
-      <span class="material-symbols-outlined text-xl">person_check</span>
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[#0e0e0f]/97 backdrop-blur-xl flex justify-around items-center pt-2 pb-3 px-1 z-50 border-t border-outline-variant/10">
+    <a class="mob-nav flex flex-col items-center gap-0.5 px-4 py-1 cursor-pointer transition-all" data-view="availability">
+      <span class="material-symbols-outlined text-[22px]">person_check</span>
       <span class="text-[9px] uppercase tracking-wider font-bold">Mine</span>
+      <span class="mob-dot mt-0.5"></span>
     </a>
-    <a class="mob-nav flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-all cursor-pointer" data-view="heatmap">
-      <span class="material-symbols-outlined text-xl">calendar_view_month</span>
+    <a class="mob-nav flex flex-col items-center gap-0.5 px-4 py-1 cursor-pointer transition-all" data-view="heatmap">
+      <span class="material-symbols-outlined text-[22px]">calendar_view_month</span>
       <span class="text-[9px] uppercase tracking-wider font-bold">Heatmap</span>
+      <span class="mob-dot mt-0.5"></span>
     </a>
-    <a class="mob-nav flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-all cursor-pointer" data-view="daily">
-      <span class="material-symbols-outlined text-xl">schedule</span>
+    <a class="mob-nav flex flex-col items-center gap-0.5 px-4 py-1 cursor-pointer transition-all" data-view="daily">
+      <span class="material-symbols-outlined text-[22px]">schedule</span>
       <span class="text-[9px] uppercase tracking-wider font-bold">Daily</span>
+      <span class="mob-dot mt-0.5"></span>
+    </a>
+    <a class="mob-nav flex flex-col items-center gap-0.5 px-4 py-1 cursor-pointer transition-all" data-view="sessions">
+      <span class="material-symbols-outlined text-[22px]">celebration</span>
+      <span class="text-[9px] uppercase tracking-wider font-bold">Lepak</span>
+      <span class="mob-dot mt-0.5"></span>
     </a>
   </nav>
 
+  <!-- Pending Confirmation Bar -->
+  <div id="pending-bar">
+    <div class="px-5 py-3 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="material-symbols-outlined text-primary text-base flex-shrink-0">edit_calendar</span>
+        <span class="text-sm font-bold text-on-surface" id="pb-summary">0 changes pending</span>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button id="pb-discard" class="px-3 py-1.5 text-xs text-outline hover:text-primary transition-colors font-bold uppercase tracking-wider">Discard</button>
+        <button id="pb-confirm" class="px-4 py-2 bg-primary text-on-primary font-bold text-sm rounded-lg hover:opacity-90 active:scale-95 transition-all">Confirm</button>
+      </div>
+    </div>
+    <div id="pb-list" class="px-5 pb-3 flex flex-wrap gap-2 max-h-36 overflow-y-auto"></div>
+  </div>
+
 </div><!-- /app-view -->
+
+<!-- ── Lepak Creation Modal ────────────────────────────────────────────────── -->
+<div id="lepak-modal">
+  <div class="modal-box">
+    <div class="p-5 border-b border-outline-variant/10 flex items-center justify-between">
+      <div>
+        <h2 class="font-headline font-bold text-xl text-on-surface">Initiate Lepak</h2>
+        <p class="text-sm text-on-surface-variant mt-0.5">Pilih hari yang paling ramai free</p>
+      </div>
+      <button id="lepak-modal-close" class="text-outline hover:text-primary p-1.5 rounded-full hover:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="p-5 flex flex-col gap-5">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-widest text-outline mb-3 block">Best Days (by overlap)</span>
+        <div id="lepak-days" class="flex flex-col gap-2"></div>
+      </div>
+      <div>
+        <label class="text-xs font-bold uppercase tracking-widest text-outline block mb-2">Session Name</label>
+        <input id="lepak-name" type="text" maxlength="60" placeholder='e.g. "Makan-makan Friday"'
+          class="w-full bg-surface-container-low border border-outline-variant/30 focus:border-primary/60 outline-none rounded-lg px-4 py-3 text-sm text-on-surface placeholder:text-outline transition-colors font-body"/>
+      </div>
+      <button id="lepak-confirm" class="w-full py-3 bg-primary text-on-primary font-bold text-sm rounded-lg hover:opacity-90 active:scale-95 transition-all">
+        Create Session
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
      FIREBASE + APP LOGIC
      ══════════════════════════════════════════════════════════════════════════ -->
 <script type="module">
 
-  // ┌──────────────────────────────────────────────────────────────────┐
-  // │  REPLACE THIS BLOCK WITH YOUR FIREBASE PROJECT CONFIG            │
-  // └──────────────────────────────────────────────────────────────────┘
 const firebaseConfig = {
   apiKey: "AIzaSyA8v7ojdxSoW_zZhNWSZlUITW5KoRu_bqg",
   authDomain: "pendam-santai.firebaseapp.com",
@@ -475,12 +639,11 @@ const firebaseConfig = {
   measurementId: "G-TLT99SPE6Q"
 };
 
-
   import { initializeApp }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getDatabase, ref, set, remove, get, onValue }
+  import { getDatabase, ref, set, remove, get, onValue, push }
     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
   if (firebaseConfig.apiKey === 'YOUR_API_KEY') {
@@ -493,14 +656,22 @@ const firebaseConfig = {
   const gp   = new GoogleAuthProvider();
 
   // ── State ──────────────────────────────────────────────────────────────────
-  let me           = null;           // Firebase user
-  let allUsers     = {};             // uid → { name, email, photoURL }
-  let availability = {};             // YYYY-MM-DD → { uid: true, … }
-  let activeView   = 'availability';
-  let selectedDate = todayStr();
-
+  let me             = null;
+  let allUsers       = {};
+  let availability   = {};
+  let activeView     = 'availability';
+  let selectedDate   = todayStr();
   let avYear = new Date().getFullYear(), avMonth = new Date().getMonth();
   let htYear = new Date().getFullYear(), htMonth = new Date().getMonth();
+
+  // New state
+  let pendingSelections = {};    // dateStr → { am, pm }
+  let pendingRemovals   = new Set();
+  let myNotifications   = [];
+  let lepakPlans        = {};
+  let notifPanelOpen    = false;
+  let dataSubscribed    = false;
+  let selectedLepakDate = null;
 
   // ── Auth ───────────────────────────────────────────────────────────────────
   document.getElementById('signin-btn').addEventListener('click', () =>
@@ -519,19 +690,19 @@ const firebaseConfig = {
       bootApp();
       subscribeData();
     } else {
-      document.getElementById('login-view').style.display  = '';
-      document.getElementById('app-view').style.display    = 'none';
+      dataSubscribed = false;
+      document.getElementById('login-view').style.display = '';
+      document.getElementById('app-view').style.display   = 'none';
     }
   });
 
   function bootApp() {
-    document.getElementById('login-view').style.display  = 'none';
-    document.getElementById('app-view').style.display    = 'block';
-    // Populate header + sidebar with user info
+    document.getElementById('login-view').style.display = 'none';
+    document.getElementById('app-view').style.display   = 'block';
     const name  = me.displayName || me.email;
     const inits = getInitials(name);
-    document.getElementById('sb-name').textContent  = name;
-    document.getElementById('sb-email').textContent = me.email;
+    document.getElementById('sb-name').textContent      = name;
+    document.getElementById('sb-email').textContent     = me.email;
     document.getElementById('sb-initials').textContent  = inits;
     document.getElementById('hdr-initials').textContent = inits;
     if (me.photoURL) {
@@ -541,23 +712,33 @@ const firebaseConfig = {
     goView('availability');
   }
 
-  // ── Data subscription ──────────────────────────────────────────────────────
+  // ── Data subscription (flag prevents duplicate listeners) ──────────────────
   function subscribeData() {
+    if (dataSubscribed) return;
+    dataSubscribed = true;
+
     onValue(ref(db, 'users'), snap => {
       allUsers = snap.val() || {};
       redraw();
+      renderUpcomingLepak();
     });
     onValue(ref(db, 'availability'), snap => {
       availability = snap.val() || {};
       redraw();
     });
-  }
-
-  async function toggleDay(dateStr) {
-    if (!me) return;
-    const r = ref(db, `availability/${dateStr}/${me.uid}`);
-    const snap = await get(r);
-    if (snap.exists()) await remove(r); else await set(r, true);
+    onValue(ref(db, `notifications/${me.uid}`), snap => {
+      const data = snap.val() || {};
+      myNotifications = Object.entries(data)
+        .map(([id, n]) => ({ id, ...n }))
+        .sort((a, b) => b.ts - a.ts);
+      renderNotifBadge();
+      if (notifPanelOpen) renderNotifPanel();
+    });
+    onValue(ref(db, 'lepak'), snap => {
+      lepakPlans = snap.val() || {};
+      renderUpcomingLepak();
+      if (activeView === 'sessions') renderSessionsView();
+    });
   }
 
   // ── Navigation ─────────────────────────────────────────────────────────────
@@ -567,20 +748,19 @@ const firebaseConfig = {
 
   function goView(name) {
     activeView = name;
-    ['availability', 'heatmap', 'daily'].forEach(v => {
-      const el = document.getElementById(v + '-view');
-      el.style.display = v === name ? 'flex' : 'none';
+    ['availability', 'heatmap', 'daily', 'sessions'].forEach(v => {
+      document.getElementById(v + '-view').style.display = v === name ? 'flex' : 'none';
     });
-    // Sidebar active state
     document.querySelectorAll('.nav-link').forEach(el => {
       const on = el.dataset.view === name;
       el.style.color      = on ? '#f2be8c' : '#9c8e82';
       el.style.background = on ? '#1f1f20' : '';
       el.style.fontWeight = on ? '700' : '';
     });
-    // Mobile nav active state
     document.querySelectorAll('.mob-nav').forEach(el => {
-      el.style.color = el.dataset.view === name ? '#f2be8c' : '#9c8e82';
+      const on = el.dataset.view === name;
+      el.style.color = on ? '#f2be8c' : '#9c8e82';
+      el.classList.toggle('mob-active', on);
     });
     redraw();
   }
@@ -589,6 +769,69 @@ const firebaseConfig = {
     if (activeView === 'availability') renderAvail();
     if (activeView === 'heatmap')      renderHeatmap();
     if (activeView === 'daily')        renderDaily();
+    if (activeView === 'sessions')     renderSessionsView();
+  }
+
+  // ── Notifications ──────────────────────────────────────────────────────────
+  document.getElementById('notif-btn').addEventListener('click', toggleNotifPanel);
+  document.getElementById('notif-close').addEventListener('click', toggleNotifPanel);
+  document.getElementById('notif-backdrop').addEventListener('click', toggleNotifPanel);
+  document.getElementById('notif-mark-read').addEventListener('click', markNotifsRead);
+
+  function toggleNotifPanel() {
+    notifPanelOpen = !notifPanelOpen;
+    document.getElementById('notif-panel').classList.toggle('open', notifPanelOpen);
+    document.getElementById('notif-backdrop').classList.toggle('open', notifPanelOpen);
+    if (notifPanelOpen) { renderNotifPanel(); markNotifsRead(); }
+  }
+
+  function renderNotifBadge() {
+    const unread = myNotifications.filter(n => !n.read).length;
+    const badge  = document.getElementById('notif-badge');
+    badge.style.display = unread > 0 ? 'flex' : 'none';
+    badge.textContent   = unread > 9 ? '9+' : String(unread);
+  }
+
+  function renderNotifPanel() {
+    const el = document.getElementById('notif-list');
+    if (!myNotifications.length) {
+      el.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-center px-6">
+        <span class="material-symbols-outlined text-4xl text-outline mb-3">notifications_none</span>
+        <p class="text-sm text-outline">No notifications yet</p>
+      </div>`;
+      return;
+    }
+    el.innerHTML = '';
+    myNotifications.forEach(n => {
+      const row = document.createElement('div');
+      row.className = `flex items-start gap-3 px-3 py-3 rounded-lg ${n.read ? '' : 'bg-primary/5'}`;
+      const icon  = (n.type === 'lepak_created' || n.type === 'self_lepak') ? 'celebration'
+                  : n.type === 'self_free' ? 'check_circle' : 'group';
+      const icolor = n.type === 'self_free' ? '#c1ce91' : '#f2be8c';
+      row.innerHTML = `
+        <span class="material-symbols-outlined text-base flex-shrink-0 mt-0.5" style="color:${icolor}">${icon}</span>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm text-on-surface leading-snug">${escHtml(n.msg)}</p>
+          <p class="text-[10px] text-outline mt-1">${timeAgo(n.ts)}</p>
+        </div>
+        ${!n.read ? '<div class="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0 mt-2"></div>' : ''}
+      `;
+      el.appendChild(row);
+    });
+  }
+
+  async function markNotifsRead() {
+    const unread = myNotifications.filter(n => !n.read);
+    if (!unread.length) return;
+    await Promise.all(unread.map(n =>
+      set(ref(db, `notifications/${me.uid}/${n.id}/read`), true)
+    ));
+  }
+
+  async function sendNotif(uid, msg, type) {
+    await push(ref(db, `notifications/${uid}`), {
+      msg, type, ts: Date.now(), read: false
+    });
   }
 
   // ── MY AVAILABILITY ────────────────────────────────────────────────────────
@@ -599,16 +842,29 @@ const firebaseConfig = {
     avMonth++; if (avMonth > 11) { avMonth = 0; avYear++; } renderAvail();
   });
 
+  // Also wire up desktop prev/next buttons
+  document.querySelectorAll('.av-prev-d').forEach(b => b.addEventListener('click', () => {
+    avMonth--; if (avMonth < 0) { avMonth = 11; avYear--; } renderAvail();
+  }));
+  document.querySelectorAll('.av-next-d').forEach(b => b.addEventListener('click', () => {
+    avMonth++; if (avMonth > 11) { avMonth = 0; avYear++; } renderAvail();
+  }));
+
   function renderAvail() {
-    document.getElementById('av-month').textContent = MONTHS[avMonth];
-    document.getElementById('av-year').textContent  = avYear;
+    const m = MONTHS[avMonth], y = avYear;
+    document.getElementById('av-month').textContent   = m;
+    document.getElementById('av-year').textContent    = y;
+    const md = document.getElementById('av-month-d');
+    const yd = document.getElementById('av-year-d');
+    if (md) md.textContent = m;
+    if (yd) yd.textContent = y;
     renderAvailGrid();
     renderUpcoming();
     renderAvailStatus();
   }
 
   function renderAvailGrid() {
-    const grid   = document.getElementById('av-grid');
+    const grid  = document.getElementById('av-grid');
     grid.innerHTML = '';
     const todStr = todayStr();
     const days   = daysInMonth(avYear, avMonth);
@@ -622,18 +878,29 @@ const firebaseConfig = {
       const weekend = dow === 0 || dow === 6;
       const past    = ds < todStr;
       const today   = ds === todStr;
-      const free    = !!(availability[ds] && availability[ds][me?.uid]);
+      const slots          = getSlots(ds, me?.uid);
+      const isPending      = !!pendingSelections[ds];
+      const isPendingRm    = pendingRemovals.has(ds);
 
       const btn = document.createElement(past || weekend ? 'div' : 'button');
       btn.className = 'day-cell';
 
-      if (free) {
-        btn.style.background = '#2a2a2b';
-        btn.style.outline    = '1px solid rgba(242,190,140,0.5)';
+      if (isPendingRm) {
+        btn.style.background    = 'rgba(255,180,171,0.04)';
+        btn.style.outline       = '1.5px dashed rgba(255,180,171,0.35)';
+        btn.style.outlineOffset = '-1px';
+        btn.style.opacity       = '0.45';
+      } else if (isPending) {
+        btn.style.background    = 'rgba(242,190,140,0.07)';
+        btn.style.outline       = '1.5px dashed rgba(242,190,140,0.55)';
+        btn.style.outlineOffset = '-1px';
+      } else if (slots) {
+        btn.style.background    = '#2a2a2b';
+        btn.style.outline       = '1px solid rgba(242,190,140,0.5)';
         btn.style.outlineOffset = '-1px';
       } else if (today) {
-        btn.style.background = '#1f1f20';
-        btn.style.outline    = '1px solid #9c8e82';
+        btn.style.background    = '#1f1f20';
+        btn.style.outline       = '1px solid #9c8e82';
         btn.style.outlineOffset = '-1px';
       } else {
         btn.style.background = weekend ? 'transparent' : '#1f1f20';
@@ -642,19 +909,32 @@ const firebaseConfig = {
 
       const numEl = document.createElement('span');
       numEl.className  = 'text-sm md:text-base font-headline font-bold';
-      numEl.style.color = free ? '#f2be8c' : today ? '#e5e2e3' : '#d4c4b7';
+      numEl.style.color = (slots || isPending) ? '#f2be8c' : today ? '#e5e2e3' : '#d4c4b7';
       numEl.textContent = d;
       btn.appendChild(numEl);
 
-      if (free) {
+      if (isPendingRm) {
+        const lbl = document.createElement('span');
+        lbl.className   = 'text-[7px] uppercase tracking-tighter font-bold mt-0.5';
+        lbl.style.color = 'rgba(255,180,171,0.7)';
+        lbl.textContent = 'Remove';
+        btn.appendChild(lbl);
+      } else if (isPending) {
+        const ps  = pendingSelections[ds];
+        const lbl = document.createElement('span');
+        lbl.className   = 'text-[7px] uppercase tracking-tighter font-bold mt-0.5';
+        lbl.style.color = 'rgba(242,190,140,0.7)';
+        lbl.textContent = ps.am && ps.pm ? 'Pending' : ps.am ? 'AM' : 'PM';
+        btn.appendChild(lbl);
+      } else if (slots) {
         const lbl = document.createElement('span');
         lbl.className   = 'text-[7px] md:text-[8px] uppercase tracking-tighter font-bold mt-0.5';
         lbl.style.color = 'rgba(242,190,140,0.7)';
-        lbl.textContent = 'Free';
+        lbl.textContent = slotLabel(slots);
         btn.appendChild(lbl);
       } else if (!past && !weekend) {
         const dot = document.createElement('span');
-        dot.className = 'w-1 h-1 rounded-full mt-1';
+        dot.className        = 'w-1 h-1 rounded-full mt-1';
         dot.style.background = '#c1ce91';
         dot.style.boxShadow  = '0 0 6px #c1ce91';
         btn.appendChild(dot);
@@ -662,12 +942,132 @@ const firebaseConfig = {
 
       if (!past && !weekend) {
         btn.style.cursor = 'pointer';
-        btn.addEventListener('click', () => toggleDay(ds));
+        btn.addEventListener('click', () => handleDayClick(ds));
       }
-
       grid.appendChild(btn);
     }
   }
+
+  // ── Pending logic ──────────────────────────────────────────────────────────
+  function handleDayClick(ds) {
+    if (pendingRemovals.has(ds)) {
+      pendingRemovals.delete(ds);
+    } else if (pendingSelections[ds]) {
+      delete pendingSelections[ds];
+    } else if (getSlots(ds, me?.uid)) {
+      pendingRemovals.add(ds);
+    } else {
+      pendingSelections[ds] = { am: true, pm: true };
+    }
+    renderAvailGrid();
+    renderPendingBar();
+  }
+
+  function renderPendingBar() {
+    const bar      = document.getElementById('pending-bar');
+    const addCount = Object.keys(pendingSelections).length;
+    const rmCount  = pendingRemovals.size;
+    const total    = addCount + rmCount;
+
+    if (total === 0) { bar.classList.remove('open'); return; }
+    bar.classList.add('open');
+
+    const parts = [];
+    if (addCount) parts.push(`${addCount} to add`);
+    if (rmCount)  parts.push(`${rmCount} to remove`);
+    document.getElementById('pb-summary').textContent = parts.join(' · ');
+
+    const list = document.getElementById('pb-list');
+    list.innerHTML = '';
+
+    Object.entries(pendingSelections).sort().forEach(([ds, slots]) => {
+      const d    = new Date(ds + 'T12:00:00');
+      const chip = document.createElement('div');
+      chip.className = 'flex items-center gap-1.5 bg-surface-container-highest rounded-lg px-2.5 py-1.5 border border-primary/20';
+      chip.innerHTML = `
+        <span class="text-xs font-bold text-on-surface">${DAYS_S[d.getDay()]} ${d.getDate()}</span>
+        <button class="am-tog px-1.5 py-0.5 rounded text-[10px] font-bold uppercase transition-colors" data-date="${ds}"
+          style="background:${slots.am ? 'rgba(242,190,140,0.2)' : 'transparent'};color:${slots.am ? '#f2be8c' : '#9c8e82'}">AM</button>
+        <button class="pm-tog px-1.5 py-0.5 rounded text-[10px] font-bold uppercase transition-colors" data-date="${ds}"
+          style="background:${slots.pm ? 'rgba(242,190,140,0.2)' : 'transparent'};color:${slots.pm ? '#f2be8c' : '#9c8e82'}">PM</button>
+        <button class="rm-pend text-outline hover:text-error text-sm font-bold leading-none ml-0.5 transition-colors" data-date="${ds}">×</button>
+      `;
+      list.appendChild(chip);
+    });
+
+    [...pendingRemovals].sort().forEach(ds => {
+      const d    = new Date(ds + 'T12:00:00');
+      const chip = document.createElement('div');
+      chip.className = 'flex items-center gap-1.5 bg-surface-container-highest rounded-lg px-2.5 py-1.5 border border-error/20';
+      chip.innerHTML = `
+        <span class="material-symbols-outlined text-error" style="font-size:12px">remove_circle</span>
+        <span class="text-xs font-bold text-on-surface/50 line-through">${DAYS_S[d.getDay()]} ${d.getDate()}</span>
+        <button class="undo-rm text-[10px] text-outline hover:text-primary font-bold uppercase tracking-wider ml-1 transition-colors" data-date="${ds}">Undo</button>
+      `;
+      list.appendChild(chip);
+    });
+
+    list.querySelectorAll('.am-tog').forEach(btn => btn.addEventListener('click', () => {
+      const ds = btn.dataset.date;
+      if (!pendingSelections[ds]) return;
+      const cur = pendingSelections[ds];
+      if (cur.am && !cur.pm) return;
+      pendingSelections[ds] = { ...cur, am: !cur.am };
+      renderPendingBar(); renderAvailGrid();
+    }));
+    list.querySelectorAll('.pm-tog').forEach(btn => btn.addEventListener('click', () => {
+      const ds = btn.dataset.date;
+      if (!pendingSelections[ds]) return;
+      const cur = pendingSelections[ds];
+      if (!cur.am && cur.pm) return;
+      pendingSelections[ds] = { ...cur, pm: !cur.pm };
+      renderPendingBar(); renderAvailGrid();
+    }));
+    list.querySelectorAll('.rm-pend').forEach(btn => btn.addEventListener('click', () => {
+      delete pendingSelections[btn.dataset.date];
+      renderPendingBar(); renderAvailGrid();
+    }));
+    list.querySelectorAll('.undo-rm').forEach(btn => btn.addEventListener('click', () => {
+      pendingRemovals.delete(btn.dataset.date);
+      renderPendingBar(); renderAvailGrid();
+    }));
+  }
+
+  document.getElementById('pb-discard').addEventListener('click', () => {
+    pendingSelections = {}; pendingRemovals = new Set();
+    renderPendingBar(); renderAvailGrid();
+  });
+
+  document.getElementById('pb-confirm').addEventListener('click', async () => {
+    if (!me) return;
+    const btn = document.getElementById('pb-confirm');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const added   = Object.entries(pendingSelections);
+      const removed = [...pendingRemovals];
+      await Promise.all([
+        ...added.map(([ds, slots]) => set(ref(db, `availability/${ds}/${me.uid}`), slots)),
+        ...removed.map(ds => remove(ref(db, `availability/${ds}/${me.uid}`)))
+      ]);
+
+      const myName     = me.displayName || me.email;
+      const otherUids  = Object.keys(allUsers).filter(uid => uid !== me.uid);
+
+      if (added.length > 0) {
+        const datesList = added.sort(([a],[b]) => a.localeCompare(b)).map(([ds, slots]) => {
+          const d = new Date(ds + 'T12:00:00');
+          return `${MONTHS_S[d.getMonth()]} ${d.getDate()} (${slotLabel(slots)})`;
+        }).join(', ');
+        for (const uid of otherUids) await sendNotif(uid, `${myName} is free on ${datesList}`, 'team_free');
+        await sendNotif(me.uid, `You marked ${added.length} day${added.length > 1 ? 's' : ''} as free`, 'self_free');
+      }
+
+      pendingSelections = {}; pendingRemovals = new Set();
+      renderPendingBar(); renderAvailGrid(); renderUpcoming(); renderAvailStatus();
+    } finally {
+      btn.disabled = false; btn.textContent = 'Confirm';
+    }
+  });
 
   function renderUpcoming() {
     const el  = document.getElementById('av-upcoming');
@@ -682,8 +1082,9 @@ const firebaseConfig = {
       return;
     }
     my.forEach((ds, i) => {
-      const d = new Date(ds + 'T12:00:00');
-      const row = document.createElement('div');
+      const d     = new Date(ds + 'T12:00:00');
+      const slots = getSlots(ds, me?.uid);
+      const row   = document.createElement('div');
       row.className = `flex items-center gap-4 py-3 ${i < my.length - 1 ? 'border-b border-outline-variant/10' : ''}`;
       row.innerHTML = `
         <div class="w-10 text-center flex-shrink-0">
@@ -692,7 +1093,7 @@ const firebaseConfig = {
         </div>
         <div class="flex-grow">
           <p class="text-sm font-bold text-on-surface">${DAYS_F[d.getDay()]}</p>
-          <p class="text-[10px] text-on-surface-variant font-medium uppercase tracking-wide">Available</p>
+          <p class="text-[10px] text-on-surface-variant font-medium uppercase tracking-wide">${slotLabel(slots)}</p>
         </div>
         <span class="material-symbols-outlined text-primary icon-fill text-lg" style="font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24">check_circle</span>
       `;
@@ -707,7 +1108,7 @@ const firebaseConfig = {
     const sub = document.getElementById('av-status-sub');
     if (!cnt) {
       txt.textContent = 'No free days set';
-      sub.textContent = 'Click any future weekday to mark yourself available.';
+      sub.textContent = 'Tap any future weekday to select, then confirm.';
     } else {
       txt.textContent = `${cnt} free day${cnt > 1 ? 's' : ''} upcoming`;
       sub.textContent = 'Your availability is synced with the team heatmap.';
@@ -722,12 +1123,23 @@ const firebaseConfig = {
     htMonth++; if (htMonth > 11) { htMonth = 0; htYear++; } renderHeatmap();
   });
 
+  // Desktop heatmap nav
+  document.querySelectorAll('.ht-prev-d').forEach(b => b.addEventListener('click', () => {
+    htMonth--; if (htMonth < 0) { htMonth = 11; htYear--; } renderHeatmap();
+  }));
+  document.querySelectorAll('.ht-next-d').forEach(b => b.addEventListener('click', () => {
+    htMonth++; if (htMonth > 11) { htMonth = 0; htYear++; } renderHeatmap();
+  }));
+
   function renderHeatmap() {
-    document.getElementById('ht-month').textContent = MONTHS[htMonth];
-    document.getElementById('ht-year').textContent  = htYear;
-    renderHeatGrid();
-    renderHeatInsight();
-    renderBandwidthList();
+    const m = MONTHS[htMonth], y = htYear;
+    document.getElementById('ht-month').textContent = m;
+    document.getElementById('ht-year').textContent  = y;
+    const md = document.getElementById('ht-month-d');
+    const yd = document.getElementById('ht-year-d');
+    if (md) md.textContent = m;
+    if (yd) yd.textContent = y;
+    renderHeatGrid(); renderHeatInsight(); renderBandwidthList();
   }
 
   function renderHeatGrid() {
@@ -738,9 +1150,11 @@ const firebaseConfig = {
     const offset = mondayOffset(htYear, htMonth);
     const team   = Math.max(Object.keys(allUsers).length, 1);
 
+    // Only consider future/today dates for the "Sync" highlight (bug fix)
     let maxCount = 0, bestDate = null;
     for (let d = 1; d <= days; d++) {
       const ds  = fmt(htYear, htMonth, d);
+      if (ds < todStr) continue;
       const dow = new Date(htYear, htMonth, d).getDay();
       if (dow === 0 || dow === 6) continue;
       const c = Object.keys(availability[ds] || {}).length;
@@ -755,15 +1169,15 @@ const firebaseConfig = {
       const weekend = dow === 0 || dow === 6;
       const past    = ds < todStr;
       const count   = Object.keys(availability[ds] || {}).length;
-      const isSync  = !weekend && maxCount >= 2 && count === maxCount;
+      const isSync  = !weekend && !past && maxCount >= 2 && ds === bestDate;
 
       const cell = document.createElement('button');
       cell.className = 'heat-cell';
 
       if (isSync) {
-        cell.style.background  = '#f2be8c';
-        cell.style.boxShadow   = '0 0 16px rgba(242,190,140,0.3)';
-        cell.style.outline     = '2px solid rgba(242,190,140,0.3)';
+        cell.style.background    = '#f2be8c';
+        cell.style.boxShadow     = '0 0 16px rgba(242,190,140,0.3)';
+        cell.style.outline       = '2px solid rgba(242,190,140,0.3)';
         cell.style.outlineOffset = '2px';
       } else if (weekend || past) {
         cell.style.background = '#0e0e0f';
@@ -772,7 +1186,7 @@ const firebaseConfig = {
       }
 
       const numEl = document.createElement('span');
-      numEl.style.fontSize  = 'clamp(9px, 2vw, 12px)';
+      numEl.style.fontSize   = 'clamp(9px, 2vw, 12px)';
       numEl.style.fontFamily = 'Manrope, sans-serif';
       numEl.style.fontWeight = '700';
       numEl.style.color = isSync ? '#482904' : (weekend || past ? '#353436' : '#e5e2e3');
@@ -786,7 +1200,7 @@ const firebaseConfig = {
         cell.appendChild(lbl);
       } else if (count > 0 && !weekend) {
         const cnt = document.createElement('span');
-        cnt.style.cssText = `font-size:7px;font-weight:700;color:${isSync ? '#482904' : '#9c8e82'}`;
+        cnt.style.cssText = `font-size:7px;font-weight:700;color:${past ? '#353436' : '#9c8e82'}`;
         cnt.textContent = count;
         cell.appendChild(cnt);
       }
@@ -797,12 +1211,14 @@ const firebaseConfig = {
   }
 
   function renderHeatInsight() {
-    const team  = Math.max(Object.keys(allUsers).length, 1);
-    const days  = daysInMonth(htYear, htMonth);
+    const team   = Math.max(Object.keys(allUsers).length, 1);
+    const days   = daysInMonth(htYear, htMonth);
+    const todStr = todayStr();
     let maxCount = 0, bestDate = null;
 
     for (let d = 1; d <= days; d++) {
       const ds  = fmt(htYear, htMonth, d);
+      if (ds < todStr) continue;
       const dow = new Date(htYear, htMonth, d).getDay();
       if (dow === 0 || dow === 6) continue;
       const c = Object.keys(availability[ds] || {}).length;
@@ -810,8 +1226,8 @@ const firebaseConfig = {
     }
 
     if (bestDate) {
-      const bd   = new Date(bestDate + 'T12:00:00');
-      const pct  = Math.round((maxCount / team) * 100);
+      const bd  = new Date(bestDate + 'T12:00:00');
+      const pct = Math.round((maxCount / team) * 100);
       document.getElementById('sp-date').textContent    = `${MONTHS[bd.getMonth()]} ${bd.getDate()}`;
       document.getElementById('sp-desc').textContent    = `${maxCount} of ${team} available — best overlap this month.`;
       document.getElementById('sp-pct').textContent     = `${pct}%`;
@@ -826,11 +1242,9 @@ const firebaseConfig = {
         const u = allUsers[uid]; if (!u) return;
         const av = document.createElement('div');
         av.style.cssText = 'width:36px;height:36px;border-radius:50%;border:2px solid #1f1f20;overflow:hidden;flex-shrink:0;background:#353436;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#f2be8c;';
-        if (u.photoURL) {
-          av.innerHTML = `<img src="${u.photoURL}" style="width:100%;height:100%;object-fit:cover" alt="${u.name}"/>`;
-        } else {
-          av.textContent = getInitials(u.name);
-        }
+        av.innerHTML = u.photoURL
+          ? `<img src="${u.photoURL}" style="width:100%;height:100%;object-fit:cover" alt=""/>`
+          : getInitials(u.name);
         ac.appendChild(av);
       });
 
@@ -838,25 +1252,27 @@ const firebaseConfig = {
       btn.style.display = 'block';
       btn.onclick = () => { selectedDate = bestDate; goView('daily'); };
     } else {
-      document.getElementById('sp-date').textContent = '–';
-      document.getElementById('sp-desc').textContent = 'No availability data yet for this month.';
-      document.getElementById('sp-pct').textContent  = '–';
-      document.getElementById('sp-bar').style.width  = '0%';
-      document.getElementById('sp-insight').textContent = 'Mark your availability to see team overlap.';
-      document.getElementById('sp-btn').style.display   = 'none';
-      document.getElementById('sp-avatars').innerHTML   = '';
+      document.getElementById('sp-date').textContent        = '–';
+      document.getElementById('sp-desc').textContent        = 'No upcoming availability data yet.';
+      document.getElementById('sp-pct').textContent         = '–';
+      document.getElementById('sp-bar').style.width         = '0%';
+      document.getElementById('sp-insight').textContent     = 'Mark your availability to see team overlap.';
+      document.getElementById('sp-btn').style.display       = 'none';
+      document.getElementById('sp-avatars').innerHTML       = '';
     }
   }
 
   function renderBandwidthList() {
     const el   = document.getElementById('ht-list');
     el.innerHTML = '';
-    const team = Math.max(Object.keys(allUsers).length, 1);
-    const days = daysInMonth(htYear, htMonth);
+    const team   = Math.max(Object.keys(allUsers).length, 1);
+    const days   = daysInMonth(htYear, htMonth);
+    const todStr = todayStr();
 
     const candidates = [];
     for (let d = 1; d <= days; d++) {
       const ds  = fmt(htYear, htMonth, d);
+      if (ds < todStr) continue;
       const dow = new Date(htYear, htMonth, d).getDay();
       if (dow === 0 || dow === 6) continue;
       const c = Object.keys(availability[ds] || {}).length;
@@ -865,14 +1281,14 @@ const firebaseConfig = {
     candidates.sort((a, b) => b.c - a.c);
 
     if (!candidates.length) {
-      el.innerHTML = '<p class="text-sm text-outline italic px-1">No days with 2+ people free yet.</p>';
+      el.innerHTML = '<p class="text-sm text-outline italic px-1">No upcoming days with 2+ people free yet.</p>';
       return;
     }
 
     candidates.slice(0, 4).forEach(({ ds, c }, i) => {
-      const d    = new Date(ds + 'T12:00:00');
-      const top  = i === 0;
-      const row  = document.createElement('div');
+      const d   = new Date(ds + 'T12:00:00');
+      const top = i === 0;
+      const row = document.createElement('div');
       row.className = 'group flex items-center justify-between p-4 md:p-5 bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer rounded-lg';
       row.innerHTML = `
         <div class="flex items-center gap-4">
@@ -911,17 +1327,40 @@ const firebaseConfig = {
     selectedDate = todayStr(); renderDaily();
   });
 
-  function renderDaily() {
-    const d       = new Date(selectedDate + 'T12:00:00');
-    const dayData = availability[selectedDate] || {};
-    const freeIds = Object.keys(dayData);
-    const allIds  = Object.keys(allUsers);
-    const unsetIds = allIds.filter(uid => !dayData[uid]);
+  // Desktop daily nav
+  document.querySelectorAll('.dd-prev-d').forEach(b => b.addEventListener('click', () => {
+    const d = new Date(selectedDate + 'T12:00:00'); d.setDate(d.getDate() - 1);
+    selectedDate = fmtFromDate(d); renderDaily();
+  }));
+  document.querySelectorAll('.dd-next-d').forEach(b => b.addEventListener('click', () => {
+    const d = new Date(selectedDate + 'T12:00:00'); d.setDate(d.getDate() + 1);
+    selectedDate = fmtFromDate(d); renderDaily();
+  }));
+  document.querySelectorAll('.dd-today-d').forEach(b => b.addEventListener('click', () => {
+    selectedDate = todayStr(); renderDaily();
+  }));
 
-    document.getElementById('dd-dayname').textContent = DAYS_F[d.getDay()];
-    document.getElementById('dd-datestr').textContent = `${MONTHS_S[d.getMonth()]} ${d.getDate()}`;
-    document.getElementById('dd-free').textContent    = freeIds.length;
-    document.getElementById('dd-unset').textContent   = unsetIds.length;
+  function setEl(id, val) { const e = document.getElementById(id); if (e) e.textContent = val; }
+
+  function renderDaily() {
+    const d        = new Date(selectedDate + 'T12:00:00');
+    const dayData  = availability[selectedDate] || {};
+    const freeIds  = Object.keys(dayData);
+    const allIds   = Object.keys(allUsers);
+    const unsetIds = allIds.filter(uid => !dayData[uid]);
+    const dayName  = DAYS_F[d.getDay()];
+    const dateStr  = `${MONTHS_S[d.getMonth()]} ${d.getDate()}`;
+
+    // Mobile elements
+    setEl('dd-dayname', dayName);
+    setEl('dd-datestr', dateStr);
+    setEl('dd-free',    freeIds.length);
+    setEl('dd-unset',   unsetIds.length);
+    // Desktop elements
+    setEl('dd-dayname-d', dayName);
+    setEl('dd-datestr-d', dateStr);
+    setEl('dd-free-d',    freeIds.length);
+    setEl('dd-unset-d',   unsetIds.length);
 
     renderColleagues(freeIds, unsetIds);
     renderTimeDist(freeIds);
@@ -937,13 +1376,17 @@ const firebaseConfig = {
       return;
     }
     ordered.forEach(([uid, isFree]) => {
-      const u  = allUsers[uid]; if (!u) return;
-      const isMe = uid === me?.uid;
+      const u = allUsers[uid]; if (!u) return;
+      const isMe    = uid === me?.uid;
+      const slots   = isFree ? getSlots(selectedDate, uid) : null;
+      const sLabel  = slots ? (slots.am && slots.pm ? 'Full Day' : slots.am ? 'AM Only' : 'PM Only') : 'Unset';
+      const sColor  = isFree ? '#c1ce91' : '#9c8e82';
+
       const card = document.createElement('div');
       card.className = 'group bg-surface-container-low hover:bg-surface-container transition-all p-4 md:p-5 rounded-xl flex items-center justify-between';
 
       const photoEl = u.photoURL
-        ? `<img src="${u.photoURL}" style="width:100%;height:100%;object-fit:cover" alt="${u.name}"/>`
+        ? `<img src="${escHtml(u.photoURL)}" style="width:100%;height:100%;object-fit:cover" alt=""/>`
         : `<span style="font-size:12px;font-weight:700;color:#f2be8c">${getInitials(u.name)}</span>`;
 
       card.innerHTML = `
@@ -956,14 +1399,14 @@ const firebaseConfig = {
           </div>
           <div>
             <h4 class="font-headline font-bold text-on-surface text-sm md:text-base">
-              ${u.name}${isMe ? ' <span style="color:rgba(242,190,140,0.5);font-size:11px;font-weight:400">(you)</span>' : ''}
+              ${escHtml(u.name)}${isMe ? ' <span style="color:rgba(242,190,140,0.5);font-size:11px;font-weight:400">(you)</span>' : ''}
             </h4>
-            <p class="text-xs text-on-surface-variant">${u.email}</p>
+            <p class="text-xs text-on-surface-variant">${escHtml(u.email)}</p>
           </div>
         </div>
-        <div class="hidden sm:block">
-          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:${isFree ? '#c1ce91' : '#9c8e82'}">
-            ${isFree ? 'Free All Day' : 'Unset'}
+        <div class="hidden sm:block flex-shrink-0">
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:${sColor}">
+            ${sLabel}
           </span>
         </div>
       `;
@@ -975,15 +1418,18 @@ const firebaseConfig = {
     const el = document.getElementById('dd-timedist');
     el.innerHTML = '';
     const BLOCKS = [
-      { label: 'Morning', time: '09:00' },
-      { label: 'Afternoon', time: '13:00' },
-      { label: 'Evening', time: '17:00' },
+      { label: 'Morning',   time: '09:00', slot: 'am' },
+      { label: 'Afternoon', time: '13:00', slot: 'pm' },
+      { label: 'Evening',   time: '17:00', slot: 'pm' },
     ];
     BLOCKS.forEach(block => {
-      const freeUsers = freeIds.slice(0, 4).map(uid => allUsers[uid]).filter(Boolean);
-      const avatarHtml = freeUsers.map(u => `
+      const slotUsers = freeIds
+        .filter(uid => { const s = getSlots(selectedDate, uid); return s && s[block.slot]; })
+        .map(uid => allUsers[uid]).filter(Boolean).slice(0, 4);
+
+      const avatarHtml = slotUsers.map(u => `
         <div style="width:28px;height:28px;border-radius:50%;border:2px solid #1f1f20;overflow:hidden;background:#353436;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#f2be8c;flex-shrink:0">
-          ${u.photoURL ? `<img src="${u.photoURL}" style="width:100%;height:100%;object-fit:cover"/>` : getInitials(u.name)}
+          ${u.photoURL ? `<img src="${escHtml(u.photoURL)}" style="width:100%;height:100%;object-fit:cover"/>` : getInitials(u.name)}
         </div>
       `).join('');
 
@@ -991,10 +1437,10 @@ const firebaseConfig = {
       row.className = 'flex justify-between items-center';
       row.innerHTML = `
         <div>
-          <span class="font-headline text-xl font-extrabold" style="color:${freeIds.length ? '#f2be8c' : 'rgba(229,226,227,0.2)'}">${block.time}</span>
+          <span class="font-headline text-xl font-extrabold" style="color:${slotUsers.length ? '#f2be8c' : 'rgba(229,226,227,0.2)'}">${block.time}</span>
           <span class="block text-[10px] uppercase tracking-wider text-outline">${block.label}</span>
         </div>
-        <div class="flex -space-x-2">${freeIds.length ? avatarHtml : '<span class="text-xs text-outline">—</span>'}</div>
+        <div class="flex -space-x-2">${slotUsers.length ? avatarHtml : '<span class="text-xs text-outline">—</span>'}</div>
       `;
       el.appendChild(row);
     });
@@ -1012,10 +1458,194 @@ const firebaseConfig = {
       : msgs[d.getDate() % msgs.length];
   }
 
+  // ── LEPAK SESSIONS ─────────────────────────────────────────────────────────
+  document.getElementById('open-lepak-modal').addEventListener('click', openLepakModal);
+  document.getElementById('lepak-modal-close').addEventListener('click', () =>
+    document.getElementById('lepak-modal').classList.remove('open')
+  );
+  document.getElementById('lepak-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('lepak-modal'))
+      document.getElementById('lepak-modal').classList.remove('open');
+  });
+  document.getElementById('lepak-confirm').addEventListener('click', confirmLepakPlan);
+
+  function openLepakModal() {
+    selectedLepakDate = null;
+    document.getElementById('lepak-name').value = '';
+    renderLepakDays();
+    document.getElementById('lepak-modal').classList.add('open');
+  }
+
+  function getLepakCandidates() {
+    const today = todayStr();
+    const seen  = new Set();
+    const out   = [];
+    for (let i = 0; i < 60; i++) {
+      const d = new Date(); d.setDate(d.getDate() + i);
+      const dow = d.getDay();
+      if (dow === 0 || dow === 6) continue;
+      const ds = fmtFromDate(d);
+      if (seen.has(ds)) continue; seen.add(ds);
+      out.push({ ds, count: Object.keys(availability[ds] || {}).length });
+    }
+    out.sort((a, b) => b.count - a.count || a.ds.localeCompare(b.ds));
+    return out.slice(0, 7);
+  }
+
+  function renderLepakDays() {
+    const el   = document.getElementById('lepak-days');
+    el.innerHTML = '';
+    const team = Math.max(Object.keys(allUsers).length, 1);
+    getLepakCandidates().forEach(({ ds, count }) => {
+      const d          = new Date(ds + 'T12:00:00');
+      const isSelected = ds === selectedLepakDate;
+      const freeNames  = Object.keys(availability[ds] || {}).slice(0, 3)
+        .map(uid => allUsers[uid]?.name?.split(' ')[0] || '?').join(', ');
+
+      const card = document.createElement('button');
+      card.className = 'w-full flex items-center justify-between p-3 rounded-lg border transition-all text-left';
+      card.style.background   = isSelected ? 'rgba(242,190,140,0.08)' : '#1b1b1c';
+      card.style.borderColor  = isSelected ? 'rgba(242,190,140,0.5)'  : 'rgba(80,69,59,0.3)';
+
+      card.innerHTML = `
+        <div class="min-w-0">
+          <p class="text-sm font-bold text-on-surface">${DAYS_F[d.getDay()]}, ${MONTHS_S[d.getMonth()]} ${d.getDate()}</p>
+          <p class="text-xs text-outline mt-0.5 truncate">${count > 0 ? `${freeNames}${count > 3 ? ` +${count - 3} more` : ''} free` : 'No one marked free yet'}</p>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0 ml-3">
+          <span class="text-lg font-headline font-bold" style="color:${count >= 2 ? '#f2be8c' : '#9c8e82'}">${count}</span>
+          <span class="text-xs text-outline">/${team}</span>
+          ${isSelected ? '<span class="material-symbols-outlined text-primary" style="font-size:18px">check_circle</span>' : ''}
+        </div>
+      `;
+      card.addEventListener('click', () => { selectedLepakDate = ds; renderLepakDays(); });
+      el.appendChild(card);
+    });
+  }
+
+  async function confirmLepakPlan() {
+    if (!me || !selectedLepakDate) {
+      if (!selectedLepakDate) { alert('Please select a day first.'); return; }
+    }
+    const name = document.getElementById('lepak-name').value.trim();
+    if (!name) { document.getElementById('lepak-name').focus(); return; }
+
+    const btn = document.getElementById('lepak-confirm');
+    btn.disabled = true; btn.textContent = 'Creating…';
+
+    try {
+      const myName  = me.displayName || me.email;
+      const d       = new Date(selectedLepakDate + 'T12:00:00');
+      const dateStr = `${DAYS_F[d.getDay()]}, ${MONTHS_S[d.getMonth()]} ${d.getDate()}`;
+
+      await push(ref(db, 'lepak'), {
+        name, date: selectedLepakDate,
+        createdBy: me.uid, createdByName: myName,
+        createdAt: Date.now()
+      });
+
+      const others = Object.keys(allUsers).filter(uid => uid !== me.uid);
+      for (const uid of others) await sendNotif(uid, `${myName} initiated "${name}" on ${dateStr}`, 'lepak_created');
+      await sendNotif(me.uid, `You created "${name}" on ${dateStr}`, 'self_lepak');
+
+      document.getElementById('lepak-modal').classList.remove('open');
+      goView('sessions');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Create Session';
+    }
+  }
+
+  function renderSessionsView() {
+    const el    = document.getElementById('sessions-list');
+    el.innerHTML = '';
+    const today = todayStr();
+    const plans = Object.entries(lepakPlans)
+      .filter(([, p]) => p.date >= today)
+      .sort(([, a], [, b]) => a.date.localeCompare(b.date));
+
+    if (!plans.length) {
+      el.innerHTML = `
+        <div class="flex flex-col items-center justify-center py-20 text-center">
+          <span class="material-symbols-outlined text-5xl text-outline mb-4">celebration</span>
+          <p class="font-headline text-xl font-bold text-on-surface mb-2">No sessions yet</p>
+          <p class="text-sm text-on-surface-variant">Initiate a lepak plan to get started.</p>
+        </div>`;
+      return;
+    }
+
+    const team = Math.max(Object.keys(allUsers).length, 1);
+    plans.forEach(([id, plan]) => {
+      const d          = new Date(plan.date + 'T12:00:00');
+      const freeCount  = Object.keys(availability[plan.date] || {}).length;
+      const isCreator  = plan.createdBy === me?.uid;
+
+      const card = document.createElement('div');
+      card.className = 'bg-surface-container-low rounded-xl p-5 md:p-6 border border-outline-variant/10 flex items-center justify-between gap-4';
+      card.innerHTML = `
+        <div class="flex items-center gap-4 min-w-0">
+          <div class="w-12 h-12 flex-shrink-0 rounded-xl flex flex-col items-center justify-center bg-primary/10 border border-primary/20">
+            <span class="text-[10px] font-bold text-primary uppercase leading-none">${MONTHS_S[d.getMonth()]}</span>
+            <span class="text-xl font-headline font-extrabold text-primary leading-tight">${d.getDate()}</span>
+          </div>
+          <div class="min-w-0">
+            <h3 class="font-headline font-bold text-on-surface text-base md:text-lg truncate">${escHtml(plan.name)}</h3>
+            <p class="text-xs text-on-surface-variant mt-0.5">${DAYS_F[d.getDay()]} · by ${escHtml(plan.createdByName)}</p>
+            <p class="text-xs text-outline mt-1">${freeCount} of ${team} free on this day</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <button class="view-day-btn px-3 py-1.5 text-xs font-bold text-outline hover:text-primary border border-outline-variant/30 hover:border-primary/40 rounded-lg transition-all uppercase tracking-wider" data-date="${plan.date}">
+            View
+          </button>
+          ${isCreator ? `<button class="del-plan-btn text-outline hover:text-error p-1.5 rounded-lg hover:bg-surface-container transition-all" data-id="${id}">
+            <span class="material-symbols-outlined text-base">delete</span>
+          </button>` : ''}
+        </div>
+      `;
+      el.appendChild(card);
+    });
+
+    el.querySelectorAll('.view-day-btn').forEach(btn =>
+      btn.addEventListener('click', () => { selectedDate = btn.dataset.date; goView('daily'); })
+    );
+    el.querySelectorAll('.del-plan-btn').forEach(btn =>
+      btn.addEventListener('click', async () => {
+        if (confirm('Delete this session?'))
+          await remove(ref(db, `lepak/${btn.dataset.id}`));
+      })
+    );
+  }
+
+  function renderUpcomingLepak() {
+    const card  = document.getElementById('upcoming-lepak-card');
+    if (!card) return;
+    const today = todayStr();
+    const next  = Object.values(lepakPlans)
+      .filter(p => p.date >= today)
+      .sort((a, b) => a.date.localeCompare(b.date))[0];
+
+    if (!next) { card.style.display = 'none'; return; }
+    const d = new Date(next.date + 'T12:00:00');
+    card.style.display = 'block';
+    card.innerHTML = `
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary">celebration</span>
+        <div class="flex-1 min-w-0">
+          <span class="text-[10px] font-bold uppercase tracking-widest text-primary">Next Lepak</span>
+          <p class="text-sm font-bold text-on-surface truncate">${escHtml(next.name)}</p>
+          <p class="text-xs text-on-surface-variant">${DAYS_F[d.getDay()]}, ${MONTHS_S[d.getMonth()]} ${d.getDate()}</p>
+        </div>
+        <button id="ulc-view-btn" class="text-xs font-bold text-outline hover:text-primary uppercase tracking-wider transition-colors flex-shrink-0 px-2">View all</button>
+      </div>
+    `;
+    document.getElementById('ulc-view-btn').addEventListener('click', () => goView('sessions'));
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────────
   const MONTHS   = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const MONTHS_S = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const DAYS_F   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const DAYS_S   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
   function todayStr() {
     const d = new Date();
@@ -1044,6 +1674,31 @@ const firebaseConfig = {
     if (r <= 0.45) return 'rgba(212,163,115,0.28)';
     if (r <= 0.7)  return 'rgba(212,163,115,0.55)';
     return '#f2be8c';
+  }
+  function getSlots(date, uid) {
+    const val = availability[date]?.[uid];
+    if (!val) return null;
+    if (val === true) return { am: true, pm: true };
+    return { am: !!val.am, pm: !!val.pm };
+  }
+  function slotLabel(slots) {
+    if (!slots) return 'Unset';
+    if (slots.am && slots.pm) return 'Free';
+    if (slots.am) return 'AM';
+    return 'PM';
+  }
+  function timeAgo(ts) {
+    const m = Math.floor((Date.now() - ts) / 60000);
+    if (m < 1)   return 'Just now';
+    if (m < 60)  return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24)  return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  }
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
 </script>
