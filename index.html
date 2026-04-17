@@ -1449,7 +1449,7 @@ const firebaseConfig = {
   function renderBrew(freeIds, unsetIds, d) {
     const name = DAYS_F[d.getDay()];
     const msgs = [
-      `"${freeIds.length} orang free on ${name}. ${freeIds.length >= 3 ? 'Confirm jadi ah, jangan last minute cancel.' : freeIds.length >= 2 ? 'Sikit je lagi. Kena paksa yang lain keluar jugak.' : 'Sorang je? Sedih weh.'"`,
+      `"${freeIds.length} orang free on ${name}. ${freeIds.length >= 3 ? 'Confirm jadi ah, jangan last minute cancel.' : freeIds.length >= 2 ? 'Sikit je lagi. Kena paksa yang lain keluar jugak.' : 'Sorang je? Sedih weh.'}"`,
       `"${name}: ${freeIds.length} free, ${unsetIds.length} lagi belum update. Korang ni sibuk ke malas nak reply?"`,
       `"${freeIds.length} orang dah declare free ${name}. Yang lain tu tengah apa — scroll TikTok je ke?"`,
     ];
