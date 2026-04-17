@@ -164,7 +164,7 @@
         </div>
         <div class="mt-10 flex items-center gap-6">
           <div class="h-[1px] w-16 bg-outline-variant"></div>
-          <span class="text-[10px] font-label uppercase tracking-[0.4em] text-outline">"Syallah Stat.." - 2012</span>
+          <span id="login-quote" class="text-[10px] font-label uppercase tracking-[0.4em] text-outline"></span>
         </div>
       </div>
     </div>
@@ -649,6 +649,16 @@ const firebaseConfig = {
   if (firebaseConfig.apiKey === 'YOUR_API_KEY') {
     document.getElementById('cfg-banner').style.display = 'block';
   }
+
+  // ── Login quotes — add your own below, one per line ───────────────────────
+  const LOGIN_QUOTES = [
+    '"Syallah Stat.." - 2012',
+    '"Ah" - Mad, 1994 - ?',
+    '"Roastaaa" - Fir, 2011',
+    '"Charcothhhhh" - Sufi, 2011',
+  ];
+  document.getElementById('login-quote').textContent =
+    LOGIN_QUOTES[Math.floor(Math.random() * LOGIN_QUOTES.length)];
 
   const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
@@ -1233,8 +1243,8 @@ const firebaseConfig = {
       document.getElementById('sp-pct').textContent     = `${pct}%`;
       document.getElementById('sp-bar').style.width     = `${pct}%`;
       document.getElementById('sp-insight').textContent = maxCount >= 2
-        ? `"${maxCount} orang free on the ${ordinal(bd.getDate())} — lepak confirm boleh jadi ni."`
-        : '"Update free days korang dulu. Macam mana nak plan kalau takde data?"';
+        ? `"${maxCount} orang free on the ${ordinal(bd.getDate())} — mcm boleh jadi je ni.."`
+        : '"Korg update dulu bila yg korg free."';
 
       const ac = document.getElementById('sp-avatars');
       ac.innerHTML = '';
@@ -1372,7 +1382,7 @@ const firebaseConfig = {
     el.innerHTML = '';
     const ordered = [...freeIds.map(u => [u, true]), ...unsetIds.map(u => [u, false])];
     if (!ordered.length) {
-      el.innerHTML = '<p class="text-sm text-outline italic px-1">Takde sesiapa lagi. Suruh kawan-kawan sign in lah.</p>';
+      el.innerHTML = '<p class="text-sm text-outline italic px-1">Takde members lagi. Suruh yg lain sign in lah.</p>';
       return;
     }
     ordered.forEach(([uid, isFree]) => {
@@ -1449,12 +1459,12 @@ const firebaseConfig = {
   function renderBrew(freeIds, unsetIds, d) {
     const name = DAYS_F[d.getDay()];
     const msgs = [
-      `"${freeIds.length} orang free on ${name}. ${freeIds.length >= 3 ? 'Confirm jadi ah, jangan last minute cancel.' : freeIds.length >= 2 ? 'Sikit je lagi. Kena paksa yang lain keluar jugak.' : 'Sorang je? Sedih weh.'}"`,
-      `"${name}: ${freeIds.length} free, ${unsetIds.length} lagi belum update. Korang ni sibuk ke malas nak reply?"`,
-      `"${freeIds.length} orang dah declare free ${name}. Yang lain tu tengah apa — scroll TikTok je ke?"`,
+      `"Ada ${freeIds.length} orang free on ${name}. ${freeIds.length >= 3 ? 'Kasi jadi, jangan last minute cancel.' : freeIds.length >= 2 ? 'Sikit je lagi. Try paksa yang lain join.' : 'Sorang je? Sedih.'}"`,
+      `"${name}: ${freeIds.length} free, ${unsetIds.length} lagi belum update. Busy ke malas nak reply? Hmm.."`,
+      `"${freeIds.length} orang dah confirm free ${name}."`,
     ];
     document.getElementById('dd-brew').textContent = freeIds.length === 0
-      ? '"Takde sesiapa free lagi. Semua orang menyibuk atau terlupa update. Classic."'
+      ? '"Belum ada yang free lagi.. Semua busy kot."'
       : msgs[d.getDate() % msgs.length];
   }
 
