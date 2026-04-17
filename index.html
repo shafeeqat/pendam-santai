@@ -152,13 +152,11 @@
         <div class="absolute -top-12 -left-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl"></div>
         <div class="grid grid-cols-2 gap-6">
           <div class="aspect-[4/5] rounded-xl overflow-hidden bg-surface-container-low border border-white/5 relative group">
-            <img class="w-full h-full object-cover grayscale contrast-125 opacity-40 group-hover:opacity-60 transition-opacity duration-700"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdGk3pooH4rC10iN87HND-5aBh6qrdAZY2U65T0e7EZms9S46NId7jpIomx7lIhV1Lh462NLg4s9mT_AwyDogINHqTxZ0FsS-ORTSnSkx5_HCggj_ZWqnFDNL3rbsZZSOv8a4r1fr66h9c4_6hy50-XVZ8MnIOgap8awjusoxl9ojP_WjAWyGlbbOkU-UPqaCqE5KIda_bXMXpxtE_W-pT1FJtAvRAs4QCRSkX3qXabtxYKECQwv8M_tPAwCW-mLj-6KwQ6RJ71mU" alt=""/>
+            <img id="login-img-left" class="w-full h-full object-cover grayscale contrast-125 opacity-40 group-hover:opacity-60 transition-opacity duration-700" src="" alt=""/>
             <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60"></div>
           </div>
           <div class="aspect-[4/5] mt-16 rounded-xl overflow-hidden bg-surface-container-low border border-white/5 relative group">
-            <img class="w-full h-full object-cover grayscale contrast-110 opacity-40 group-hover:opacity-60 transition-opacity duration-700"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDz549T9M6HJflhcKIqHR5dcGx1ewFzP97VZpyAl7zTNHt_vhRGc9R_H5Zrsd968Qwm-m3-Y78tYscfRfD9aMxWLFUG3CRQ4qlYDAl0TNaBu3UEMgRJNHv-ZfUhsnoDDKHGkiGqyrSZZ2uZJ-xLxq2KmRa28Wm3-r5bsuQCvGVfem_iWQsR21Yu6CcujflUelhbteDW9iT1cGhnadDG0ma9Mm76VrPnBmxfbolUoxQMCFiIkCiVwHWp4TfS1pj2lQR_EI8ynJThpg" alt=""/>
+            <img id="login-img-right" class="w-full h-full object-cover grayscale contrast-110 opacity-40 group-hover:opacity-60 transition-opacity duration-700" src="" alt=""/>
             <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60"></div>
           </div>
         </div>
@@ -659,6 +657,26 @@ const firebaseConfig = {
   ];
   document.getElementById('login-quote').textContent =
     LOGIN_QUOTES[Math.floor(Math.random() * LOGIN_QUOTES.length)];
+
+  // ── Login images — add your own URLs below, two will be picked at random ──
+  const LOGIN_IMAGES = [
+    'https://github.com/shafeeqat/pendam-santai/blob/main/webFiles/img/1d6c0cfa-14a3-42a2-858b-8dabae0d2ae0.jpg?raw=true',
+    'https://github.com/shafeeqat/pendam-santai/blob/main/webFiles/img/1d6c0cfa-14a3-42a2-858b-8dabae0d2ae0.jpg?raw=true',
+    'https://github.com/shafeeqat/pendam-santai/blob/main/webFiles/img/IMG-20241121-WA0001.jpg?raw=true',
+    'https://github.com/shafeeqat/pendam-santai/blob/main/webFiles/img/IMG-20250221-WA0036.jpg?raw=true',
+    'https://github.com/shafeeqat/pendam-santai/blob/main/webFiles/img/IMG-20250508-WA0012.jpg?raw=true',
+    'https://github.com/shafeeqat/pendam-santai/blob/main/webFiles/img/IMG-20251114-WA0007.jpg?raw=true',
+    'https://github.com/shafeeqat/pendam-santai/blob/main/webFiles/img/IMG-20251117-WA0012.jpg?raw=true',
+    'https://github.com/shafeeqat/pendam-santai/blob/main/webFiles/img/IMG-20251224-WA0004.jpg?raw=true',
+    'https://github.com/shafeeqat/pendam-santai/blob/main/webFiles/img/IMG-20260314-WA0063.jpg?raw=true',
+    'https://github.com/shafeeqat/pendam-santai/blob/main/webFiles/img/eda2947d-59c8-4abe-92ad-0ca02a4e1868.jpg?raw=true',
+    // '',
+  ];
+  (() => {
+    const shuffled = [...LOGIN_IMAGES].sort(() => Math.random() - 0.5);
+    document.getElementById('login-img-left').src  = shuffled[0] || '';
+    document.getElementById('login-img-right').src = shuffled[1] || shuffled[0] || '';
+  })();
 
   const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
