@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>Pendam.Santai — Team Availability</title>
+  <title>Pendam.Santai — When r u free lah</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -175,7 +175,7 @@
         <header class="mb-10">
           <h2 class="text-3xl font-headline font-bold text-on-surface mb-3">Welcome back</h2>
           <p class="text-on-surface-variant font-body text-sm font-light leading-relaxed">
-            Sign in to mark your free days and see when the whole team is available.
+            Sign in to mark your free days and figure out when to lepak with the gang.
           </p>
         </header>
         <button id="signin-btn" class="w-full flex items-center justify-center gap-4 py-5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/30 rounded-xl transition-all active:scale-[0.98] font-body font-semibold text-on-surface tracking-wide">
@@ -189,7 +189,7 @@
         </button>
         <div class="mt-10 flex items-center gap-4">
           <div class="h-[1px] flex-1 bg-outline-variant/20"></div>
-          <span class="text-[10px] font-label uppercase tracking-[0.3em] text-outline">Member Access Only</span>
+          <span class="text-[10px] font-label uppercase tracking-[0.3em] text-outline">Pendam Only</span>
           <div class="h-[1px] flex-1 bg-outline-variant/20"></div>
         </div>
         <div class="mt-8 flex items-center justify-center gap-3">
@@ -210,8 +210,8 @@
   <!-- Sidebar -->
   <aside class="hidden md:flex h-screen w-64 fixed left-0 top-0 flex-col p-4 gap-8 bg-[#0E0E0F] z-50 border-r border-outline-variant/10 editorial-shadow">
     <div class="flex flex-col gap-1 px-2 pt-1">
-      <span class="text-primary font-black uppercase tracking-[0.1em] text-xs">Lepak</span>
-      <span class="text-[#353436] text-[10px] uppercase font-bold tracking-widest">Calendar</span>
+      <span class="text-primary font-black uppercase tracking-[0.1em] text-xs">Pendam</span>
+      <span class="text-[#353436] text-[10px] uppercase font-bold tracking-widest">when r u free lah</span>
     </div>
     <nav class="flex flex-col gap-1.5 flex-grow">
       <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer text-outline hover:text-primary hover:bg-surface-container/60" data-view="availability">
@@ -220,11 +220,11 @@
       </a>
       <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer text-outline hover:text-primary hover:bg-surface-container/60" data-view="heatmap">
         <span class="material-symbols-outlined text-xl">calendar_view_month</span>
-        <span class="text-sm tracking-wide">Team Heatmap</span>
+        <span class="text-sm tracking-wide">Gang Heatmap</span>
       </a>
       <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer text-outline hover:text-primary hover:bg-surface-container/60" data-view="daily">
         <span class="material-symbols-outlined text-xl">schedule</span>
-        <span class="text-sm tracking-wide">Daily Detail</span>
+        <span class="text-sm tracking-wide">Who's Free</span>
       </a>
       <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer text-outline hover:text-primary hover:bg-surface-container/60" data-view="sessions">
         <span class="material-symbols-outlined text-xl">celebration</span>
@@ -281,7 +281,7 @@
           <span class="material-symbols-outlined text-xl">chevron_left</span>
         </button>
         <div class="text-center">
-          <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-outline">My Availability</p>
+          <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-outline">My Free Days</p>
           <h2 class="font-headline text-xl font-extrabold tracking-tight leading-tight">
             <span id="av-month"></span> <span class="text-primary/50 text-base font-bold" id="av-year"></span>
           </h2>
@@ -294,7 +294,7 @@
       <!-- Desktop: editorial header -->
       <div class="hidden md:flex md:flex-row md:items-end justify-between gap-4">
         <div>
-          <span class="font-label text-[10px] tracking-[0.2em] text-outline font-bold uppercase">Personal Schedule</span>
+          <span class="font-label text-[10px] tracking-[0.2em] text-outline font-bold uppercase">My Free Days</span>
           <h2 class="font-headline text-5xl font-extrabold tracking-tight mt-1">
             <span id="av-month-d"></span> <span class="text-primary/40" id="av-year-d"></span>
           </h2>
@@ -351,7 +351,7 @@
           <span class="material-symbols-outlined text-xl">chevron_left</span>
         </button>
         <div class="text-center">
-          <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-outline">Team Heatmap</p>
+          <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-outline">Gang Heatmap</p>
           <h2 class="font-headline text-xl font-extrabold tracking-tight leading-tight">
             <span id="ht-month"></span> <span class="text-primary/50 text-base font-bold" id="ht-year"></span>
           </h2>
@@ -368,7 +368,7 @@
             <span id="ht-month-d"></span> <span class="text-primary/40" id="ht-year-d"></span>
           </h2>
           <p class="text-on-surface-variant text-sm mt-2 max-w-md leading-relaxed">
-            Latte tones signal alignment opportunity. Darker = quiet.
+            Brighter = more people free. Dark = everyone menyibuk lah.
           </p>
         </div>
         <div class="flex items-center gap-3">
@@ -405,7 +405,7 @@
         </div>
         <div class="lg:col-span-4 flex flex-col gap-5">
           <div class="bg-surface-container-highest p-6 md:p-8 rounded-xl border border-outline-variant/10">
-            <span class="inline-block px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest rounded-md mb-4">Optimal Alignment</span>
+            <span class="inline-block px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest rounded-md mb-4">Best Day to Lepak</span>
             <h3 class="text-3xl md:text-4xl font-headline font-bold text-primary tracking-tighter" id="sp-date">–</h3>
             <p class="text-sm text-on-surface-variant mt-2" id="sp-desc">No data yet for this month.</p>
             <div class="flex -space-x-2 mt-5 min-h-[36px]" id="sp-avatars"></div>
@@ -420,18 +420,18 @@
             </div>
             <div class="space-y-3">
               <div class="flex justify-between items-center">
-                <span class="text-sm text-outline">Team alignment</span>
+                <span class="text-sm text-outline">Gang overlap</span>
                 <span class="text-sm font-bold text-on-surface" id="sp-pct">–</span>
               </div>
               <div class="w-full bg-surface-container h-1 rounded-full overflow-hidden">
                 <div class="bg-primary h-full transition-all duration-700" id="sp-bar" style="width:0%"></div>
               </div>
-              <p class="text-xs text-on-surface-variant leading-relaxed italic" id="sp-insight">Mark your availability to see team overlap.</p>
+              <p class="text-xs text-on-surface-variant leading-relaxed italic" id="sp-insight">Update free days korang dulu baru boleh tengok overlap.</p>
             </div>
           </div>
         </div>
         <div class="lg:col-span-12 mt-2">
-          <h3 class="text-lg font-headline font-semibold mb-4 text-on-surface">Best Days This Month</h3>
+          <h3 class="text-lg font-headline font-semibold mb-4 text-on-surface">Best Days to Lepak This Month</h3>
           <div id="ht-list" class="space-y-3"></div>
         </div>
       </div>
@@ -444,7 +444,7 @@
       <div class="md:hidden">
         <div class="flex items-center justify-between mb-3">
           <div>
-            <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-outline">Daily Detail</p>
+            <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-outline">Who's Free Today</p>
             <h2 class="font-headline text-xl font-extrabold tracking-tight text-on-surface leading-tight">
               <span id="dd-dayname"></span>, <span class="text-primary/50" id="dd-datestr"></span>
             </h2>
@@ -476,7 +476,7 @@
       <!-- Desktop: editorial header -->
       <div class="hidden md:flex md:flex-row md:items-end justify-between gap-6">
         <div>
-          <p class="text-primary font-label text-xs tracking-[0.2em] uppercase mb-2 font-bold">Current Focus</p>
+          <p class="text-primary font-label text-xs tracking-[0.2em] uppercase mb-2 font-bold">Checking out</p>
           <h2 class="font-headline text-7xl font-extrabold tracking-tighter text-on-surface leading-none">
             <span id="dd-dayname-d"></span>,<br/><span class="text-primary/40" id="dd-datestr-d"></span>
           </h2>
@@ -506,7 +506,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 flex flex-col gap-4">
           <div class="flex justify-between items-center px-1">
-            <h3 class="text-lg font-headline font-bold tracking-tight">Team Availability</h3>
+            <h3 class="text-lg font-headline font-bold tracking-tight">Who's Free</h3>
             <div class="flex gap-2">
               <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-highest text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
                 <span class="w-1.5 h-1.5 rounded-full bg-tertiary shadow-[0_0_8px_#c1ce91]"></span> Free
@@ -538,7 +538,7 @@
     <section id="sessions-view" style="display:none" class="px-4 md:px-8 py-4 md:py-6 flex flex-col gap-4 md:gap-6 max-w-7xl w-full">
       <div class="flex items-center justify-between gap-4">
         <div>
-          <span class="hidden md:block font-label text-[10px] tracking-[0.2em] text-outline font-bold uppercase">Planned Meetups</span>
+          <span class="hidden md:block font-label text-[10px] tracking-[0.2em] text-outline font-bold uppercase">Coming Up</span>
           <h2 class="font-headline text-xl md:text-5xl font-extrabold tracking-tight md:mt-1 text-on-surface">
             Lepak<span class="text-primary"> Sessions</span>
           </h2>
@@ -562,7 +562,7 @@
     </a>
     <a class="mob-nav flex flex-col items-center gap-0.5 px-4 py-1 cursor-pointer transition-all" data-view="heatmap">
       <span class="material-symbols-outlined text-[22px]">calendar_view_month</span>
-      <span class="text-[9px] uppercase tracking-wider font-bold">Heatmap</span>
+      <span class="text-[9px] uppercase tracking-wider font-bold">Gang</span>
       <span class="mob-dot mt-0.5"></span>
     </a>
     <a class="mob-nav flex flex-col items-center gap-0.5 px-4 py-1 cursor-pointer transition-all" data-view="daily">
@@ -1111,7 +1111,7 @@ const firebaseConfig = {
       sub.textContent = 'Tap any future weekday to select, then confirm.';
     } else {
       txt.textContent = `${cnt} free day${cnt > 1 ? 's' : ''} upcoming`;
-      sub.textContent = 'Your availability is synced with the team heatmap.';
+      sub.textContent = 'Confirmed. Kawan-kawan boleh tengok dah.';
     }
   }
 
@@ -1229,12 +1229,12 @@ const firebaseConfig = {
       const bd  = new Date(bestDate + 'T12:00:00');
       const pct = Math.round((maxCount / team) * 100);
       document.getElementById('sp-date').textContent    = `${MONTHS[bd.getMonth()]} ${bd.getDate()}`;
-      document.getElementById('sp-desc').textContent    = `${maxCount} of ${team} available — best overlap this month.`;
+      document.getElementById('sp-desc').textContent    = `${maxCount} of ${team} orang free — paling ramai bulan ni.`;
       document.getElementById('sp-pct').textContent     = `${pct}%`;
       document.getElementById('sp-bar').style.width     = `${pct}%`;
       document.getElementById('sp-insight').textContent = maxCount >= 2
-        ? `"${maxCount} people free on the ${ordinal(bd.getDate())} — ideal window for a sync."`
-        : '"Mark more days to discover team overlap."';
+        ? `"${maxCount} orang free on the ${ordinal(bd.getDate())} — lepak confirm boleh jadi ni."`
+        : '"Update free days korang dulu. Macam mana nak plan kalau takde data?"';
 
       const ac = document.getElementById('sp-avatars');
       ac.innerHTML = '';
@@ -1253,10 +1253,10 @@ const firebaseConfig = {
       btn.onclick = () => { selectedDate = bestDate; goView('daily'); };
     } else {
       document.getElementById('sp-date').textContent        = '–';
-      document.getElementById('sp-desc').textContent        = 'No upcoming availability data yet.';
+      document.getElementById('sp-desc').textContent        = 'Takde data lagi. Semua orang busy ke?';
       document.getElementById('sp-pct').textContent         = '–';
       document.getElementById('sp-bar').style.width         = '0%';
-      document.getElementById('sp-insight').textContent     = 'Mark your availability to see team overlap.';
+      document.getElementById('sp-insight').textContent     = 'Update free days korang dulu baru boleh tengok overlap.';
       document.getElementById('sp-btn').style.display       = 'none';
       document.getElementById('sp-avatars').innerHTML       = '';
     }
@@ -1281,7 +1281,7 @@ const firebaseConfig = {
     candidates.sort((a, b) => b.c - a.c);
 
     if (!candidates.length) {
-      el.innerHTML = '<p class="text-sm text-outline italic px-1">No upcoming days with 2+ people free yet.</p>';
+      el.innerHTML = '<p class="text-sm text-outline italic px-1">Takde hari yang ramai free lagi. Korang update dulu lah.</p>';
       return;
     }
 
@@ -1297,13 +1297,13 @@ const firebaseConfig = {
             ${d.getDate()}
           </div>
           <div>
-            <h4 class="text-sm font-bold text-on-surface">${top ? 'The Sync Point' : DAYS_F[d.getDay()]}</h4>
-            <p class="text-xs text-outline">${c} member${c !== 1 ? 's' : ''} · ${DAYS_F[d.getDay()]}, ${MONTHS_S[d.getMonth()]} ${d.getDate()}</p>
+            <h4 class="text-sm font-bold text-on-surface">${top ? '🔥 Best Day to Lepak' : DAYS_F[d.getDay()]}</h4>
+            <p class="text-xs text-outline">${c} orang free · ${DAYS_F[d.getDay()]}, ${MONTHS_S[d.getMonth()]} ${d.getDate()}</p>
           </div>
         </div>
         <div class="flex items-center gap-4 md:gap-8">
           <div class="hidden sm:flex flex-col items-end">
-            <span class="text-[10px] font-bold uppercase tracking-widest" style="color:${top ? '#c1ce91' : '#9c8e82'}">${top ? 'High Overlap' : 'Available'}</span>
+            <span class="text-[10px] font-bold uppercase tracking-widest" style="color:${top ? '#c1ce91' : '#9c8e82'}">${top ? 'Most Free' : 'Available'}</span>
             <span class="text-xs text-outline">${c}/${team} free</span>
           </div>
           <span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
@@ -1372,7 +1372,7 @@ const firebaseConfig = {
     el.innerHTML = '';
     const ordered = [...freeIds.map(u => [u, true]), ...unsetIds.map(u => [u, false])];
     if (!ordered.length) {
-      el.innerHTML = '<p class="text-sm text-outline italic px-1">No team members registered yet.</p>';
+      el.innerHTML = '<p class="text-sm text-outline italic px-1">Takde sesiapa lagi. Suruh kawan-kawan sign in lah.</p>';
       return;
     }
     ordered.forEach(([uid, isFree]) => {
@@ -1449,12 +1449,12 @@ const firebaseConfig = {
   function renderBrew(freeIds, unsetIds, d) {
     const name = DAYS_F[d.getDay()];
     const msgs = [
-      `"${freeIds.length} team member${freeIds.length !== 1 ? 's' : ''} free on ${name}. ${freeIds.length >= 3 ? 'Great window for a planning session.' : 'Consider a focused 1:1.'}"`,
-      `"${name} shows ${freeIds.length} available, ${unsetIds.length} still unset. Good moment to nudge the stragglers."`,
-      `"Best collaboration window: early morning before the context-switching begins. ${freeIds.length} have cleared ${name}."`,
+      `"${freeIds.length} orang free on ${name}. ${freeIds.length >= 3 ? 'Confirm jadi ah, jangan last minute cancel.' : freeIds.length >= 2 ? 'Sikit je lagi. Kena paksa yang lain keluar jugak.' : 'Sorang je? Sedih weh.'"`,
+      `"${name}: ${freeIds.length} free, ${unsetIds.length} lagi belum update. Korang ni sibuk ke malas nak reply?"`,
+      `"${freeIds.length} orang dah declare free ${name}. Yang lain tu tengah apa — scroll TikTok je ke?"`,
     ];
     document.getElementById('dd-brew').textContent = freeIds.length === 0
-      ? '"No one has marked themselves free for this day yet."'
+      ? '"Takde sesiapa free lagi. Semua orang menyibuk atau terlupa update. Classic."'
       : msgs[d.getDate() % msgs.length];
   }
 
@@ -1590,7 +1590,7 @@ const firebaseConfig = {
           <div class="min-w-0">
             <h3 class="font-headline font-bold text-on-surface text-base md:text-lg truncate">${escHtml(plan.name)}</h3>
             <p class="text-xs text-on-surface-variant mt-0.5">${DAYS_F[d.getDay()]} · by ${escHtml(plan.createdByName)}</p>
-            <p class="text-xs text-outline mt-1">${freeCount} of ${team} free on this day</p>
+            <p class="text-xs text-outline mt-1">${freeCount} of ${team} orang free hari ni</p>
           </div>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
