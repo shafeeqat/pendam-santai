@@ -78,10 +78,15 @@
     #notif-backdrop.open { display:block; }
 
     /* Pending confirmation bar */
-    #pending-bar { position:fixed; bottom:0; left:0; right:0; z-index:60; background:#1a1a1b; border-top:1px solid rgba(242,190,140,0.25); transform:translateY(110%); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+    #pending-bar { position:fixed; bottom:0; left:0; right:0; z-index:60; background:#1a1a1b; border-top:1px solid rgba(242,190,140,0.25); transform:translateY(calc(100% + 120px)); pointer-events:none; transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); }
     @media(max-width:767px) { #pending-bar { bottom:64px; } }
     @media(min-width:768px) { #pending-bar { left:256px; } }
-    #pending-bar.open { transform:translateY(0); }
+    #pending-bar.open { transform:translateY(0); pointer-events:auto; }
+
+    /* Admin modal */
+    #admin-modal { position:fixed; inset:0; z-index:600; display:none; align-items:center; justify-content:center; padding:1rem; background:rgba(0,0,0,0.75); backdrop-filter:blur(6px); }
+    #admin-modal.open { display:flex; }
+    #admin-modal .modal-box { max-width:420px; }
 
     /* Lepak modal — centered on desktop, bottom-sheet on mobile */
     #lepak-modal { position:fixed; inset:0; z-index:400; display:none; align-items:center; justify-content:center; padding:1rem; background:rgba(0,0,0,0.75); backdrop-filter:blur(6px); }
@@ -265,6 +270,10 @@
           <span id="sb-email" class="text-[10px] text-outline truncate"></span>
         </div>
       </div>
+      <button id="admin-btn" style="display:none" class="flex items-center gap-3 px-4 py-2 text-outline hover:text-primary transition-all text-sm rounded-lg hover:bg-surface-container/60">
+        <span class="material-symbols-outlined text-base">manage_accounts</span>
+        Manage Gang
+      </button>
       <button id="signout-btn" class="flex items-center gap-3 px-4 py-2 text-outline hover:text-primary transition-all text-sm rounded-lg hover:bg-surface-container/60">
         <span class="material-symbols-outlined text-base">logout</span>
         Sign out
@@ -660,6 +669,10 @@
         <span id="drawer-email" class="text-[10px] text-outline truncate"></span>
       </div>
     </div>
+    <button id="drawer-admin-btn" style="display:none" class="w-full flex items-center gap-3 px-4 py-2.5 text-outline hover:text-primary transition-all text-sm rounded-lg hover:bg-surface-container/60">
+      <span class="material-symbols-outlined text-base">manage_accounts</span>
+      Manage Gang
+    </button>
     <button id="drawer-signout-btn" class="w-full flex items-center gap-3 px-4 py-2.5 text-outline hover:text-primary transition-all text-sm rounded-lg hover:bg-surface-container/60">
       <span class="material-symbols-outlined text-base">logout</span>
       Sign out
@@ -686,6 +699,13 @@
         <span class="text-xs font-bold uppercase tracking-widest text-outline mb-3 block">Best Days (by overlap)</span>
         <div id="lepak-days" class="flex flex-col gap-2"></div>
       </div>
+      <div id="lepak-time-suggestion" style="display:none" class="bg-primary/5 rounded-lg p-3 border border-primary/15 flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary text-base">schedule</span>
+        <div class="flex-1">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-outline">Best Time to Lepak</p>
+          <p class="text-sm font-bold text-on-surface" id="lepak-time-val">–</p>
+        </div>
+      </div>
       <div>
         <label class="text-xs font-bold uppercase tracking-widest text-outline block mb-2">Session Name</label>
         <input id="lepak-name" type="text" maxlength="60" placeholder='e.g. "Giling Friday"'
@@ -695,6 +715,22 @@
         Create Session
       </button>
     </div>
+  </div>
+</div>
+
+<!-- ── Admin Modal ──────────────────────────────────────────────────────────── -->
+<div id="admin-modal">
+  <div class="modal-box">
+    <div class="p-5 border-b border-outline-variant/10 flex items-center justify-between">
+      <div>
+        <h2 class="font-headline font-bold text-xl text-on-surface">Manage Gang</h2>
+        <p class="text-sm text-on-surface-variant mt-0.5">Remove members from Pendam</p>
+      </div>
+      <button id="admin-modal-close" class="text-outline hover:text-primary p-1.5 rounded-full hover:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div id="admin-member-list" class="p-5 flex flex-col gap-3 max-h-[60vh] overflow-y-auto"></div>
   </div>
 </div>
 
@@ -819,6 +855,7 @@ const firebaseConfig = {
       document.getElementById('hdr-photo').src    = me.photoURL;
       document.getElementById('drawer-photo').src = me.photoURL;
     }
+    showAdminButtons();
     goView('availability');
   }
 
@@ -943,7 +980,7 @@ const firebaseConfig = {
       row.innerHTML = `
         <span class="material-symbols-outlined text-base flex-shrink-0 mt-0.5" style="color:${icolor}">${icon}</span>
         <div class="flex-1 min-w-0">
-          <p class="text-sm text-on-surface leading-snug">${escHtml(n.msg)}</p>
+          <p class="text-sm leading-snug" style="color:#e5e2e3;font-weight:${n.read ? '400' : '700'}">${escHtml(n.msg)}</p>
           <p class="text-[10px] text-outline mt-1">${timeAgo(n.ts)}</p>
         </div>
         ${!n.read ? '<div class="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0 mt-2"></div>' : ''}
@@ -964,6 +1001,71 @@ const firebaseConfig = {
     await push(ref(db, `notifications/${uid}`), {
       msg, type, ts: Date.now(), read: false
     });
+  }
+
+  // ── ADMIN ──────────────────────────────────────────────────────────────────
+  const ADMIN_EMAILS = ['shaf.r210003@gmail.com'];
+  function isAdmin() { return me && ADMIN_EMAILS.includes(me.email); }
+
+  function showAdminButtons() {
+    ['admin-btn', 'drawer-admin-btn'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = isAdmin() ? 'flex' : 'none';
+    });
+  }
+
+  function openAdminModal() {
+    renderAdminMemberList();
+    document.getElementById('admin-modal').classList.add('open');
+  }
+  function closeAdminModal() {
+    document.getElementById('admin-modal').classList.remove('open');
+  }
+  document.getElementById('admin-modal-close').addEventListener('click', closeAdminModal);
+  document.getElementById('admin-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('admin-modal')) closeAdminModal();
+  });
+  document.getElementById('admin-btn').addEventListener('click', openAdminModal);
+  document.getElementById('drawer-admin-btn').addEventListener('click', () => { closeDrawer(); openAdminModal(); });
+
+  function renderAdminMemberList() {
+    const el = document.getElementById('admin-member-list');
+    el.innerHTML = '';
+    const users = Object.entries(allUsers);
+    if (!users.length) {
+      el.innerHTML = '<p class="text-sm text-outline italic">Takde members lagi.</p>';
+      return;
+    }
+    users.forEach(([uid, u]) => {
+      const isSelf = uid === me?.uid;
+      const row = document.createElement('div');
+      row.className = 'flex items-center justify-between gap-3 p-3 bg-surface-container-low rounded-xl';
+      const photoEl = u.photoURL
+        ? `<img src="${escHtml(u.photoURL)}" style="width:100%;height:100%;object-fit:cover" alt=""/>`
+        : `<span style="font-size:11px;font-weight:700;color:#f2be8c">${getInitials(u.name)}</span>`;
+      row.innerHTML = `
+        <div class="flex items-center gap-3 min-w-0">
+          <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:#353436;display:flex;align-items:center;justify-content:center;flex-shrink:0">${photoEl}</div>
+          <div class="min-w-0">
+            <p class="text-sm font-bold text-on-surface truncate">${escHtml(u.name)}${isSelf ? ' <span style="color:rgba(242,190,140,0.5);font-size:10px">(you)</span>' : ''}</p>
+            <p class="text-xs text-outline truncate">${escHtml(u.email)}</p>
+          </div>
+        </div>
+        ${!isSelf ? `<button class="remove-member-btn flex-shrink-0 px-3 py-1.5 text-xs font-bold text-error border border-error/30 hover:bg-error/10 rounded-lg transition-all uppercase tracking-wider" data-uid="${uid}" data-name="${escHtml(u.name)}">Remove</button>` : '<span class="text-[10px] text-outline uppercase tracking-wider flex-shrink-0">Admin</span>'}
+      `;
+      el.appendChild(row);
+    });
+    el.querySelectorAll('.remove-member-btn').forEach(btn =>
+      btn.addEventListener('click', async () => {
+        const uid = btn.dataset.uid, name = btn.dataset.name;
+        if (!confirm(`Remove ${name} from Pendam? This will delete all their data.`)) return;
+        btn.disabled = true; btn.textContent = 'Removing…';
+        await remove(ref(db, `users/${uid}`));
+        const avDates = Object.keys(availability);
+        await Promise.all(avDates.map(d => remove(ref(db, `availability/${d}/${uid}`))));
+        renderAdminMemberList();
+      })
+    );
   }
 
   // ── MY AVAILABILITY ────────────────────────────────────────────────────────
@@ -1056,7 +1158,8 @@ const firebaseConfig = {
         const lbl = document.createElement('span');
         lbl.className   = 'text-[7px] uppercase tracking-tighter font-bold mt-0.5';
         lbl.style.color = 'rgba(242,190,140,0.7)';
-        lbl.textContent = ps.am && ps.pm ? 'Pending' : ps.am ? 'AM' : 'PM';
+        const active = [ps.morning, ps.afternoon, ps.evening].filter(Boolean).length;
+        lbl.textContent = active === 3 ? 'All Day' : slotLabel(ps);
         btn.appendChild(lbl);
       } else if (slots) {
         const lbl = document.createElement('span');
@@ -1089,7 +1192,7 @@ const firebaseConfig = {
     } else if (getSlots(ds, me?.uid)) {
       pendingRemovals.add(ds);
     } else {
-      pendingSelections[ds] = { am: true, pm: true };
+      pendingSelections[ds] = { morning: true, afternoon: true, evening: true };
     }
     renderAvailGrid();
     renderPendingBar();
@@ -1116,12 +1219,11 @@ const firebaseConfig = {
       const d    = new Date(ds + 'T12:00:00');
       const chip = document.createElement('div');
       chip.className = 'flex items-center gap-1.5 bg-surface-container-highest rounded-lg px-2.5 py-1.5 border border-primary/20';
+      const tog = (slot, label) => `<button class="slot-tog px-1.5 py-0.5 rounded text-[10px] font-bold uppercase transition-colors" data-date="${ds}" data-slot="${slot}"
+        style="background:${slots[slot] ? 'rgba(242,190,140,0.2)' : 'transparent'};color:${slots[slot] ? '#f2be8c' : '#9c8e82'}">${label}</button>`;
       chip.innerHTML = `
         <span class="text-xs font-bold text-on-surface">${DAYS_S[d.getDay()]} ${d.getDate()}</span>
-        <button class="am-tog px-1.5 py-0.5 rounded text-[10px] font-bold uppercase transition-colors" data-date="${ds}"
-          style="background:${slots.am ? 'rgba(242,190,140,0.2)' : 'transparent'};color:${slots.am ? '#f2be8c' : '#9c8e82'}">AM</button>
-        <button class="pm-tog px-1.5 py-0.5 rounded text-[10px] font-bold uppercase transition-colors" data-date="${ds}"
-          style="background:${slots.pm ? 'rgba(242,190,140,0.2)' : 'transparent'};color:${slots.pm ? '#f2be8c' : '#9c8e82'}">PM</button>
+        ${tog('morning','Morn')}${tog('afternoon','Aftn')}${tog('evening','Eve')}
         <button class="rm-pend text-outline hover:text-error text-sm font-bold leading-none ml-0.5 transition-colors" data-date="${ds}">×</button>
       `;
       list.appendChild(chip);
@@ -1139,20 +1241,13 @@ const firebaseConfig = {
       list.appendChild(chip);
     });
 
-    list.querySelectorAll('.am-tog').forEach(btn => btn.addEventListener('click', () => {
-      const ds = btn.dataset.date;
+    list.querySelectorAll('.slot-tog').forEach(btn => btn.addEventListener('click', () => {
+      const ds = btn.dataset.date, slot = btn.dataset.slot;
       if (!pendingSelections[ds]) return;
       const cur = pendingSelections[ds];
-      if (cur.am && !cur.pm) return;
-      pendingSelections[ds] = { ...cur, am: !cur.am };
-      renderPendingBar(); renderAvailGrid();
-    }));
-    list.querySelectorAll('.pm-tog').forEach(btn => btn.addEventListener('click', () => {
-      const ds = btn.dataset.date;
-      if (!pendingSelections[ds]) return;
-      const cur = pendingSelections[ds];
-      if (!cur.am && cur.pm) return;
-      pendingSelections[ds] = { ...cur, pm: !cur.pm };
+      const active = [cur.morning, cur.afternoon, cur.evening].filter(Boolean).length;
+      if (cur[slot] && active <= 1) return; // must keep at least one
+      pendingSelections[ds] = { ...cur, [slot]: !cur[slot] };
       renderPendingBar(); renderAvailGrid();
     }));
     list.querySelectorAll('.rm-pend').forEach(btn => btn.addEventListener('click', () => {
@@ -1188,7 +1283,7 @@ const firebaseConfig = {
       if (added.length > 0) {
         const datesList = added.sort(([a],[b]) => a.localeCompare(b)).map(([ds, slots]) => {
           const d = new Date(ds + 'T12:00:00');
-          return `${MONTHS_S[d.getMonth()]} ${d.getDate()} (${slotLabel(slots)})`;
+          return `${MONTHS_S[d.getMonth()]} ${d.getDate()} (${slotLabelLong(slots)})`;
         }).join(', ');
         for (const uid of otherUids) await sendNotif(uid, `${myName} is free on ${datesList}`, 'team_free');
         await sendNotif(me.uid, `You marked ${added.length} day${added.length > 1 ? 's' : ''} as free`, 'self_free');
@@ -1364,8 +1459,10 @@ const firebaseConfig = {
       document.getElementById('sp-desc').textContent    = `${maxCount} of ${team} orang free — paling ramai bulan ni.`;
       document.getElementById('sp-pct').textContent     = `${pct}%`;
       document.getElementById('sp-bar').style.width     = `${pct}%`;
+      const peak = getPeakTime(bestDate);
+      const peakStr = peak ? ` Best time: ${peak.slot.charAt(0).toUpperCase()+peak.slot.slice(1)} (${peak.count} orang).` : '';
       document.getElementById('sp-insight').textContent = maxCount >= 2
-        ? `"${maxCount} orang free on the ${ordinal(bd.getDate())} — mcm boleh jadi je ni.."`
+        ? `"${maxCount} orang free on the ${ordinal(bd.getDate())}.${peakStr} Mcm boleh jadi je ni.."`
         : '"Korg update dulu bila yg korg free."';
 
       const ac = document.getElementById('sp-avatars');
@@ -1430,7 +1527,7 @@ const firebaseConfig = {
           </div>
           <div>
             <h4 class="text-sm font-bold text-on-surface">${top ? '🔥 Best Day to Lepak' : DAYS_F[d.getDay()]}</h4>
-            <p class="text-xs text-outline">${c} orang free · ${DAYS_F[d.getDay()]}, ${MONTHS_S[d.getMonth()]} ${d.getDate()}</p>
+            <p class="text-xs text-outline">${c} orang free · ${DAYS_F[d.getDay()]}, ${MONTHS_S[d.getMonth()]} ${d.getDate()}${(() => { const pk = getPeakTime(ds); return pk ? ` · ${pk.slot.charAt(0).toUpperCase()+pk.slot.slice(1)}` : ''; })()}</p>
           </div>
         </div>
         <div class="flex items-center gap-4 md:gap-8">
@@ -1550,9 +1647,9 @@ const firebaseConfig = {
     const el = document.getElementById('dd-timedist');
     el.innerHTML = '';
     const BLOCKS = [
-      { label: 'Morning',   time: '09:00', slot: 'am' },
-      { label: 'Afternoon', time: '13:00', slot: 'pm' },
-      { label: 'Evening',   time: '17:00', slot: 'pm' },
+      { label: 'Morning',   range: '9am–12pm',  slot: 'morning'   },
+      { label: 'Afternoon', range: '12pm–5pm',  slot: 'afternoon' },
+      { label: 'Evening',   range: '5pm–10pm',  slot: 'evening'   },
     ];
     BLOCKS.forEach(block => {
       const slotUsers = freeIds
@@ -1569,8 +1666,8 @@ const firebaseConfig = {
       row.className = 'flex justify-between items-center';
       row.innerHTML = `
         <div>
-          <span class="font-headline text-xl font-extrabold" style="color:${slotUsers.length ? '#f2be8c' : 'rgba(229,226,227,0.2)'}">${block.time}</span>
-          <span class="block text-[10px] uppercase tracking-wider text-outline">${block.label}</span>
+          <span class="font-headline text-base font-extrabold" style="color:${slotUsers.length ? '#f2be8c' : 'rgba(229,226,227,0.2)'}">${block.label}</span>
+          <span class="block text-[10px] uppercase tracking-wider text-outline">${block.range}</span>
         </div>
         <div class="flex -space-x-2">${slotUsers.length ? avatarHtml : '<span class="text-xs text-outline">—</span>'}</div>
       `;
@@ -1604,6 +1701,8 @@ const firebaseConfig = {
   function openLepakModal() {
     selectedLepakDate = null;
     document.getElementById('lepak-name').value = '';
+    const sug = document.getElementById('lepak-time-suggestion');
+    if (sug) sug.style.display = 'none';
     renderLepakDays();
     document.getElementById('lepak-modal').classList.add('open');
   }
@@ -1650,7 +1749,18 @@ const firebaseConfig = {
           ${isSelected ? '<span class="material-symbols-outlined text-primary" style="font-size:18px">check_circle</span>' : ''}
         </div>
       `;
-      card.addEventListener('click', () => { selectedLepakDate = ds; renderLepakDays(); });
+      card.addEventListener('click', () => {
+        selectedLepakDate = ds;
+        renderLepakDays();
+        const pk = getPeakTime(ds);
+        const sug = document.getElementById('lepak-time-suggestion');
+        const val = document.getElementById('lepak-time-val');
+        if (pk && sug && val) {
+          const team = Math.max(Object.keys(allUsers).length, 1);
+          val.textContent = `${pk.slot.charAt(0).toUpperCase()+pk.slot.slice(1)} — ${pk.count} of ${team} free`;
+          sug.style.display = 'flex';
+        }
+      });
       el.appendChild(card);
     });
   }
@@ -1670,8 +1780,10 @@ const firebaseConfig = {
       const d       = new Date(selectedLepakDate + 'T12:00:00');
       const dateStr = `${DAYS_F[d.getDay()]}, ${MONTHS_S[d.getMonth()]} ${d.getDate()}`;
 
+      const pk = getPeakTime(selectedLepakDate);
+      const suggestedTime = pk ? `${pk.slot.charAt(0).toUpperCase()+pk.slot.slice(1)}` : '';
       await push(ref(db, 'lepak'), {
-        name, date: selectedLepakDate,
+        name, date: selectedLepakDate, suggestedTime,
         createdBy: me.uid, createdByName: myName,
         createdAt: Date.now()
       });
@@ -1721,7 +1833,7 @@ const firebaseConfig = {
           </div>
           <div class="min-w-0">
             <h3 class="font-headline font-bold text-on-surface text-base md:text-lg truncate">${escHtml(plan.name)}</h3>
-            <p class="text-xs text-on-surface-variant mt-0.5">${DAYS_F[d.getDay()]} · by ${escHtml(plan.createdByName)}</p>
+            <p class="text-xs text-on-surface-variant mt-0.5">${DAYS_F[d.getDay()]}${plan.suggestedTime ? ` · ${plan.suggestedTime}` : ''} · by ${escHtml(plan.createdByName)}</p>
             <p class="text-xs text-outline mt-1">${freeCount} of ${team} orang free hari ni</p>
           </div>
         </div>
@@ -1810,14 +1922,31 @@ const firebaseConfig = {
   function getSlots(date, uid) {
     const val = availability[date]?.[uid];
     if (!val) return null;
-    if (val === true) return { am: true, pm: true };
-    return { am: !!val.am, pm: !!val.pm };
+    if (val === true) return { morning: true, afternoon: true, evening: true };
+    if (val.am !== undefined || val.pm !== undefined)
+      return { morning: !!val.am, afternoon: !!val.pm, evening: !!val.pm };
+    return { morning: !!val.morning, afternoon: !!val.afternoon, evening: !!val.evening };
   }
   function slotLabel(slots) {
     if (!slots) return 'Unset';
-    if (slots.am && slots.pm) return 'Free';
-    if (slots.am) return 'AM';
-    return 'PM';
+    const p = [slots.morning?'Morn':'', slots.afternoon?'Aftn':'', slots.evening?'Eve':''].filter(Boolean);
+    return p.length === 3 ? 'Free' : p.join('/') || 'Unset';
+  }
+  function slotLabelLong(slots) {
+    if (!slots) return 'Unset';
+    const p = [slots.morning?'Morning':'', slots.afternoon?'Afternoon':'', slots.evening?'Evening':''].filter(Boolean);
+    return p.length === 3 ? 'All Day' : p.join(', ') || 'Unset';
+  }
+  function getPeakTime(date) {
+    const uids = Object.keys(availability[date] || {});
+    if (!uids.length) return null;
+    const counts = { morning: 0, afternoon: 0, evening: 0 };
+    uids.forEach(uid => {
+      const s = getSlots(date, uid);
+      if (s) { if (s.morning) counts.morning++; if (s.afternoon) counts.afternoon++; if (s.evening) counts.evening++; }
+    });
+    const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+    return best && best[1] > 0 ? { slot: best[0], count: best[1] } : null;
   }
   function timeAgo(ts) {
     const m = Math.floor((Date.now() - ts) / 60000);
