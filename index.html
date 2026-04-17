@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Pendam.Santai — Team Availability</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "outline-variant": "#50453b",
+            "inverse-primary": "#7d562d",
+            "on-secondary-container": "#d6ad8e",
+            "on-primary-container": "#5b3912",
+            "surface-container": "#1f1f20",
+            "on-secondary": "#442b14",
+            "background": "#131314",
+            "surface": "#131314",
+            "surface-container-high": "#2a2a2b",
+            "surface-container-low": "#1b1b1c",
+            "surface-container-highest": "#353436",
+            "surface-container-lowest": "#0e0e0f",
+            "on-surface-variant": "#d4c4b7",
+            "primary": "#f2be8c",
+            "primary-container": "#d4a373",
+            "on-primary": "#482904",
+            "on-primary-container": "#5b3912",
+            "secondary": "#e9be9e",
+            "secondary-container": "#5e4028",
+            "on-background": "#e5e2e3",
+            "on-surface": "#e5e2e3",
+            "tertiary": "#c1ce91",
+            "tertiary-container": "#a6b377",
+            "outline": "#9c8e82",
+            "error": "#ffb4ab",
+            "surface-tint": "#f0bd8b"
+          },
+          borderRadius: {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          fontFamily: {
+            "headline": ["Manrope", "sans-serif"],
+            "body": ["Plus Jakarta Sans", "sans-serif"],
+            "label": ["Plus Jakarta Sans", "sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #131314; color: #e5e2e3; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .icon-fill { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .editorial-shadow { box-shadow: 0 16px 48px rgba(242,190,140,0.06); }
+    .glass-panel { background: rgba(31,31,32,0.85); backdrop-filter: blur(24px); }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #131314; }
+    ::-webkit-scrollbar-thumb { background: #353436; border-radius: 10px; }
+    .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+    .no-scrollbar::-webkit-scrollbar { display:none; }
+    /* day cell base — avoids Tailwind purge for dynamically set classes */
+    .day-cell { aspect-ratio:1/1; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:0.5rem; transition:all 0.15s; position:relative; overflow:hidden; }
+    .heat-cell { aspect-ratio:1/1; display:flex; flex-direction:column; justify-content:space-between; padding:0.35rem; border-radius:0.5rem; cursor:pointer; transition:all 0.2s; }
+    @media(min-width:768px) { .heat-cell { padding:0.6rem; } }
+  </style>
+</head>
+<body class="dark min-h-screen">
+
+<!-- ── Config Banner ─────────────────────────────────────────────────────── -->
+<div id="cfg-banner" style="display:none" class="bg-amber-900/60 border-b-2 border-amber-600/40 text-amber-200 px-6 py-3 text-center text-xs">
+  ⚠️ Firebase not configured — update <code class="bg-black/20 px-1.5 py-0.5 rounded">firebaseConfig</code> in the &lt;script&gt; at the bottom of this file before deploying.
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     LOGIN VIEW
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div id="login-view" class="min-h-screen flex items-center justify-center p-6 selection:bg-primary selection:text-on-primary">
+  <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-16 items-center">
+
+    <!-- Left: Branding -->
+    <div class="lg:col-span-7 mb-12 lg:mb-0 space-y-10">
+      <div class="space-y-4">
+        <h1 class="text-4xl sm:text-6xl md:text-8xl font-headline font-extrabold tracking-tighter text-on-surface leading-none">
+          Pendam<span class="text-primary">.Santai</span>
+        </h1>
+        <p class="text-xl md:text-2xl font-body text-on-surface-variant max-w-lg font-light tracking-tight">
+          Sebab "Next Week On" Selalunya Scam.
+        </p>
+      </div>
+      <div class="relative hidden md:block">
+        <div class="absolute -top-12 -left-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl"></div>
+        <div class="grid grid-cols-2 gap-6">
+          <div class="aspect-[4/5] rounded-xl overflow-hidden bg-surface-container-low border border-white/5 relative group">
+            <img class="w-full h-full object-cover grayscale contrast-125 opacity-40 group-hover:opacity-60 transition-opacity duration-700"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdGk3pooH4rC10iN87HND-5aBh6qrdAZY2U65T0e7EZms9S46NId7jpIomx7lIhV1Lh462NLg4s9mT_AwyDogINHqTxZ0FsS-ORTSnSkx5_HCggj_ZWqnFDNL3rbsZZSOv8a4r1fr66h9c4_6hy50-XVZ8MnIOgap8awjusoxl9ojP_WjAWyGlbbOkU-UPqaCqE5KIda_bXMXpxtE_W-pT1FJtAvRAs4QCRSkX3qXabtxYKECQwv8M_tPAwCW-mLj-6KwQ6RJ71mU" alt=""/>
+            <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60"></div>
+          </div>
+          <div class="aspect-[4/5] mt-16 rounded-xl overflow-hidden bg-surface-container-low border border-white/5 relative group">
+            <img class="w-full h-full object-cover grayscale contrast-110 opacity-40 group-hover:opacity-60 transition-opacity duration-700"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDz549T9M6HJflhcKIqHR5dcGx1ewFzP97VZpyAl7zTNHt_vhRGc9R_H5Zrsd968Qwm-m3-Y78tYscfRfD9aMxWLFUG3CRQ4qlYDAl0TNaBu3UEMgRJNHv-ZfUhsnoDDKHGkiGqyrSZZ2uZJ-xLxq2KmRa28Wm3-r5bsuQCvGVfem_iWQsR21Yu6CcujflUelhbteDW9iT1cGhnadDG0ma9Mm76VrPnBmxfbolUoxQMCFiIkCiVwHWp4TfS1pj2lQR_EI8ynJThpg" alt=""/>
+            <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60"></div>
+          </div>
+        </div>
+        <div class="mt-10 flex items-center gap-6">
+          <div class="h-[1px] w-16 bg-outline-variant"></div>
+          <span class="text-[10px] font-label uppercase tracking-[0.4em] text-outline">Est. 02:00 AM Digital Edition</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Sign-in panel -->
+    <div class="lg:col-span-5">
+      <div class="glass-panel p-8 md:p-14 rounded-xl editorial-shadow border border-white/10 relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+        <header class="mb-10">
+          <h2 class="text-3xl font-headline font-bold text-on-surface mb-3">Welcome back</h2>
+          <p class="text-on-surface-variant font-body text-sm font-light leading-relaxed">
+            Sign in to mark your free days and see when the whole team is available.
+          </p>
+        </header>
+
+        <button id="signin-btn" class="w-full flex items-center justify-center gap-4 py-5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/30 rounded-xl transition-all active:scale-[0.98] font-body font-semibold text-on-surface tracking-wide">
+          <svg width="20" height="20" viewBox="0 0 18 18" aria-hidden="true">
+            <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.717v2.258h2.908C16.658 14.013 17.64 11.706 17.64 9.2z" fill="#4285F4"/>
+            <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+            <path d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+          </svg>
+          Continue with Google
+        </button>
+
+        <div class="mt-10 flex items-center gap-4">
+          <div class="h-[1px] flex-1 bg-outline-variant/20"></div>
+          <span class="text-[10px] font-label uppercase tracking-[0.3em] text-outline">Team Access Only</span>
+          <div class="h-[1px] flex-1 bg-outline-variant/20"></div>
+        </div>
+
+        <div class="mt-8 flex items-center justify-center gap-3">
+          <div class="w-2 h-2 rounded-full bg-tertiary animate-pulse shadow-[0_0_12px_rgba(193,206,145,0.4)]"></div>
+          <span class="text-xs font-body text-on-surface-variant tracking-wide">Systems Operational</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     APP VIEW
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div id="app-view" style="display:none" class="min-h-screen">
+
+  <!-- Sidebar (desktop) -->
+  <aside class="hidden md:flex h-screen w-64 fixed left-0 top-0 flex-col p-4 gap-8 bg-[#0E0E0F] z-50 border-r border-outline-variant/10 editorial-shadow">
+    <div class="flex flex-col gap-1 px-2 pt-1">
+      <span class="text-primary font-black uppercase tracking-[0.1em] text-xs">Midnight Coffee</span>
+      <span class="text-[#353436] text-[10px] uppercase font-bold tracking-widest">The Digital Speakeasy</span>
+    </div>
+
+    <nav class="flex flex-col gap-1.5 flex-grow">
+      <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer text-outline hover:text-primary hover:bg-surface-container/60" data-view="availability">
+        <span class="material-symbols-outlined text-xl">person_check</span>
+        <span class="text-sm tracking-wide">My Availability</span>
+      </a>
+      <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer text-outline hover:text-primary hover:bg-surface-container/60" data-view="heatmap">
+        <span class="material-symbols-outlined text-xl">calendar_view_month</span>
+        <span class="text-sm tracking-wide">Team Heatmap</span>
+      </a>
+      <a class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer text-outline hover:text-primary hover:bg-surface-container/60" data-view="daily">
+        <span class="material-symbols-outlined text-xl">schedule</span>
+        <span class="text-sm tracking-wide">Daily Detail</span>
+      </a>
+    </nav>
+
+    <!-- User profile -->
+    <div class="mt-auto flex flex-col gap-3 pt-4 border-t border-outline-variant/10">
+      <div class="flex items-center gap-3 px-2">
+        <div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30 flex-shrink-0 bg-surface-container flex items-center justify-center">
+          <img id="sb-photo" class="w-full h-full object-cover" src="" alt="" onerror="this.style.display='none';document.getElementById('sb-initials').style.display='flex'"/>
+          <span id="sb-initials" style="display:none" class="text-[10px] font-bold text-primary"></span>
+        </div>
+        <div class="flex flex-col min-w-0">
+          <span id="sb-name" class="text-xs font-bold text-on-surface truncate"></span>
+          <span id="sb-email" class="text-[10px] text-outline truncate"></span>
+        </div>
+      </div>
+      <button id="signout-btn" class="flex items-center gap-3 px-4 py-2 text-outline hover:text-primary transition-all text-sm rounded-lg hover:bg-surface-container/60">
+        <span class="material-symbols-outlined text-base">logout</span>
+        Sign out
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="md:ml-64 min-h-screen flex flex-col pb-20 md:pb-0">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-background/95 backdrop-blur-md flex justify-between items-center px-5 md:px-8 py-4 md:py-5 border-b border-outline-variant/10">
+      <h1 class="font-headline text-lg md:text-2xl font-bold tracking-tighter text-primary">Pendam.Santai</h1>
+      <div class="flex items-center gap-3 md:gap-4">
+        <button class="text-outline hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container">
+          <span class="material-symbols-outlined text-xl">notifications</span>
+        </button>
+        <div class="w-9 h-9 rounded-full overflow-hidden border border-outline-variant/20 bg-surface-container flex items-center justify-center cursor-pointer" title="Signed in">
+          <img id="hdr-photo" class="w-full h-full object-cover" src="" alt="Profile" onerror="this.style.display='none';document.getElementById('hdr-initials').style.display='flex'"/>
+          <span id="hdr-initials" style="display:none" class="text-[10px] font-bold text-primary w-full h-full flex items-center justify-center"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ─── MY AVAILABILITY ──────────────────────────────────────────────────── -->
+    <section id="availability-view" class="px-4 md:px-8 py-6 flex flex-col gap-6 md:gap-8 max-w-7xl w-full">
+
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <span class="font-label text-[10px] tracking-[0.2em] text-outline font-bold uppercase">Personal Schedule</span>
+          <h2 class="font-headline text-4xl md:text-5xl font-extrabold tracking-tight mt-1">
+            <span id="av-month"></span> <span class="text-primary/40" id="av-year"></span>
+          </h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="av-prev" class="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline hover:text-primary hover:border-primary/40 transition-all">
+            <span class="material-symbols-outlined text-xl">chevron_left</span>
+          </button>
+          <button id="av-next" class="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline hover:text-primary hover:border-primary/40 transition-all">
+            <span class="material-symbols-outlined text-xl">chevron_right</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Calendar -->
+        <div class="lg:col-span-8 bg-surface-container-low rounded-xl overflow-hidden">
+          <div class="p-4 md:p-8">
+            <div class="grid grid-cols-7 gap-1 md:gap-2 text-center pb-3 mb-3 border-b border-outline-variant/10">
+              <div class="text-[9px] md:text-[10px] font-bold text-outline tracking-widest uppercase">Mon</div>
+              <div class="text-[9px] md:text-[10px] font-bold text-outline tracking-widest uppercase">Tue</div>
+              <div class="text-[9px] md:text-[10px] font-bold text-outline tracking-widest uppercase">Wed</div>
+              <div class="text-[9px] md:text-[10px] font-bold text-outline tracking-widest uppercase">Thu</div>
+              <div class="text-[9px] md:text-[10px] font-bold text-outline tracking-widest uppercase">Fri</div>
+              <div class="text-[9px] md:text-[10px] font-bold text-on-surface/20 tracking-widest uppercase">Sat</div>
+              <div class="text-[9px] md:text-[10px] font-bold text-on-surface/20 tracking-widest uppercase">Sun</div>
+            </div>
+            <div class="grid grid-cols-7 gap-1 md:gap-3" id="av-grid"></div>
+          </div>
+        </div>
+
+        <!-- Sidebar panel -->
+        <div class="lg:col-span-4 flex flex-col gap-4">
+          <!-- Status card -->
+          <div class="bg-primary/5 rounded-xl p-5 border border-primary/10">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold tracking-widest text-primary uppercase">Your Status</span>
+              <span class="material-symbols-outlined text-primary text-sm">auto_awesome</span>
+            </div>
+            <p class="font-headline font-bold leading-tight text-on-surface" id="av-status-txt">No free days set</p>
+            <p class="text-on-surface-variant text-sm mt-1" id="av-status-sub">Click any future weekday to mark yourself available.</p>
+          </div>
+          <!-- Upcoming free days -->
+          <div class="bg-surface-container-low rounded-xl p-5">
+            <h3 class="text-xs font-bold tracking-widest text-outline uppercase mb-4">Upcoming Free Days</h3>
+            <div id="av-upcoming" class="flex flex-col"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── TEAM HEATMAP ────────────────────────────────────────────────────── -->
+    <section id="heatmap-view" style="display:none" class="px-4 md:px-8 py-6 flex flex-col gap-6 md:gap-8 max-w-7xl w-full">
+
+      <div class="flex flex-col md:flex-row justify-between items-end gap-4 md:gap-6">
+        <div>
+          <h2 class="font-headline text-4xl md:text-6xl font-extrabold tracking-tighter text-on-surface leading-none">
+            <span id="ht-month"></span> <span class="text-primary/40" id="ht-year"></span>
+          </h2>
+          <p class="text-on-surface-variant text-sm mt-2 max-w-md leading-relaxed hidden md:block">
+            Latte tones signal alignment opportunity. Darker = quiet.
+          </p>
+        </div>
+        <div class="flex items-center gap-2 md:gap-3">
+          <button id="ht-prev" class="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline hover:text-primary hover:border-primary/40 transition-all">
+            <span class="material-symbols-outlined text-xl">chevron_left</span>
+          </button>
+          <button id="ht-next" class="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline hover:text-primary hover:border-primary/40 transition-all">
+            <span class="material-symbols-outlined text-xl">chevron_right</span>
+          </button>
+          <!-- Legend -->
+          <div class="flex flex-col items-end gap-1 ml-2">
+            <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-outline">Density</span>
+            <div class="flex gap-0.5 h-2 w-24 md:w-32 rounded-full overflow-hidden">
+              <div class="flex-1" style="background:#1b1b1c"></div>
+              <div class="flex-1" style="background:rgba(212,163,115,0.2)"></div>
+              <div class="flex-1" style="background:rgba(212,163,115,0.5)"></div>
+              <div class="flex-1" style="background:#f2be8c"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Heatmap calendar -->
+        <div class="lg:col-span-8 bg-surface-container-low rounded-xl p-4 md:p-8 border border-outline-variant/5">
+          <div class="grid grid-cols-7 gap-1 md:gap-3 mb-3 md:mb-5">
+            <div class="text-[9px] md:text-[10px] font-bold text-outline uppercase tracking-widest text-center">Mon</div>
+            <div class="text-[9px] md:text-[10px] font-bold text-outline uppercase tracking-widest text-center">Tue</div>
+            <div class="text-[9px] md:text-[10px] font-bold text-outline uppercase tracking-widest text-center">Wed</div>
+            <div class="text-[9px] md:text-[10px] font-bold text-outline uppercase tracking-widest text-center">Thu</div>
+            <div class="text-[9px] md:text-[10px] font-bold text-outline uppercase tracking-widest text-center">Fri</div>
+            <div class="text-[9px] md:text-[10px] font-bold text-outline uppercase tracking-widest text-center">Sat</div>
+            <div class="text-[9px] md:text-[10px] font-bold text-outline uppercase tracking-widest text-center">Sun</div>
+          </div>
+          <div class="grid grid-cols-7 gap-1 md:gap-3" id="ht-grid"></div>
+        </div>
+
+        <!-- Insight sidebar -->
+        <div class="lg:col-span-4 flex flex-col gap-5">
+          <!-- Sync Point card -->
+          <div class="bg-surface-container-highest p-6 md:p-8 rounded-xl border border-outline-variant/10">
+            <span class="inline-block px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest rounded-md mb-4">Optimal Alignment</span>
+            <h3 class="text-3xl md:text-4xl font-headline font-bold text-primary tracking-tighter" id="sp-date">–</h3>
+            <p class="text-sm text-on-surface-variant mt-2" id="sp-desc">No data yet for this month.</p>
+            <div class="flex -space-x-2 mt-5 min-h-[36px]" id="sp-avatars"></div>
+            <button id="sp-btn" style="display:none" class="w-full py-3 mt-5 bg-primary text-on-primary font-bold text-sm rounded-lg hover:opacity-90 active:scale-95 transition-all">
+              View This Day
+            </button>
+          </div>
+          <!-- Overlap bar -->
+          <div class="bg-surface-container-low p-5 rounded-xl border border-outline-variant/10">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="material-symbols-outlined text-tertiary text-sm">auto_awesome</span>
+              <span class="text-xs font-bold uppercase tracking-widest text-on-surface">Best Overlap</span>
+            </div>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-outline">Team alignment</span>
+                <span class="text-sm font-bold text-on-surface" id="sp-pct">–</span>
+              </div>
+              <div class="w-full bg-surface-container h-1 rounded-full overflow-hidden">
+                <div class="bg-primary h-full transition-all duration-700" id="sp-bar" style="width:0%"></div>
+              </div>
+              <p class="text-xs text-on-surface-variant leading-relaxed italic" id="sp-insight">Mark your availability to see team overlap.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bandwidth details list -->
+        <div class="lg:col-span-12 mt-2">
+          <h3 class="text-lg font-headline font-semibold mb-4 text-on-surface">Best Days This Month</h3>
+          <div id="ht-list" class="space-y-3"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ─── DAILY DETAIL ─────────────────────────────────────────────────────── -->
+    <section id="daily-view" style="display:none" class="px-4 md:px-8 py-6 flex flex-col gap-6 max-w-7xl w-full">
+
+      <!-- Hero date -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
+        <div>
+          <p class="text-primary font-label text-xs tracking-[0.2em] uppercase mb-2 font-bold">Current Focus</p>
+          <h2 class="font-headline text-5xl md:text-7xl font-extrabold tracking-tighter text-on-surface leading-none">
+            <span id="dd-dayname"></span>,<br/><span class="text-primary/40" id="dd-datestr"></span>
+          </h2>
+        </div>
+        <div class="flex gap-3">
+          <div class="bg-surface-container-low p-4 rounded-xl flex flex-col items-center min-w-[72px]">
+            <span class="text-[10px] text-on-surface-variant font-bold tracking-widest uppercase">Free</span>
+            <span class="text-3xl font-headline font-bold text-tertiary" id="dd-free">0</span>
+          </div>
+          <div class="bg-surface-container-low p-4 rounded-xl flex flex-col items-center min-w-[72px]">
+            <span class="text-[10px] text-on-surface-variant font-bold tracking-widest uppercase">Unset</span>
+            <span class="text-3xl font-headline font-bold text-secondary" id="dd-unset">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Day navigation -->
+      <div class="flex items-center gap-2">
+        <button id="dd-prev" class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-outline-variant/30 hover:border-primary/40 text-outline hover:text-primary transition-all text-xs font-bold uppercase tracking-wider">
+          <span class="material-symbols-outlined text-base">chevron_left</span> Prev
+        </button>
+        <button id="dd-today" class="px-3 py-2 rounded-lg border border-outline-variant/30 hover:border-primary/40 text-outline hover:text-primary transition-all text-xs font-bold uppercase tracking-wider">
+          Today
+        </button>
+        <button id="dd-next" class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-outline-variant/30 hover:border-primary/40 text-outline hover:text-primary transition-all text-xs font-bold uppercase tracking-wider">
+          Next <span class="material-symbols-outlined text-base">chevron_right</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Colleague list -->
+        <div class="lg:col-span-2 flex flex-col gap-4">
+          <div class="flex justify-between items-center px-1">
+            <h3 class="text-lg font-headline font-bold tracking-tight">Team Availability</h3>
+            <div class="flex gap-2">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-highest text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+                <span class="w-1.5 h-1.5 rounded-full bg-tertiary shadow-[0_0_8px_#c1ce91]"></span> Free
+              </span>
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-highest text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+                <span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span> Unset
+              </span>
+            </div>
+          </div>
+          <div id="dd-list" class="flex flex-col gap-3"></div>
+        </div>
+
+        <!-- Side widgets -->
+        <div class="flex flex-col gap-4">
+          <!-- Time distribution -->
+          <div class="bg-surface-container p-5 md:p-6 rounded-xl border border-outline-variant/10">
+            <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-primary mb-5">Day Overview</h3>
+            <div class="flex flex-col gap-5" id="dd-timedist"></div>
+          </div>
+          <!-- Daily brew -->
+          <div class="bg-primary/5 p-5 md:p-6 rounded-xl border border-primary/10">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="material-symbols-outlined text-primary text-sm">coffee</span>
+              <span class="text-xs font-bold uppercase tracking-widest text-primary">Daily Brew</span>
+            </div>
+            <p class="text-sm italic text-on-surface-variant leading-relaxed" id="dd-brew">Loading…</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Mobile bottom nav -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[#1F1F20]/95 backdrop-blur-md flex justify-around items-center py-3 px-2 z-50 border-t border-outline-variant/10">
+    <a class="mob-nav flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-all cursor-pointer" data-view="availability">
+      <span class="material-symbols-outlined text-xl">person_check</span>
+      <span class="text-[9px] uppercase tracking-wider font-bold">Mine</span>
+    </a>
+    <a class="mob-nav flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-all cursor-pointer" data-view="heatmap">
+      <span class="material-symbols-outlined text-xl">calendar_view_month</span>
+      <span class="text-[9px] uppercase tracking-wider font-bold">Heatmap</span>
+    </a>
+    <a class="mob-nav flex flex-col items-center gap-1 px-4 py-1.5 rounded-lg transition-all cursor-pointer" data-view="daily">
+      <span class="material-symbols-outlined text-xl">schedule</span>
+      <span class="text-[9px] uppercase tracking-wider font-bold">Daily</span>
+    </a>
+  </nav>
+
+</div><!-- /app-view -->
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     FIREBASE + APP LOGIC
+     ══════════════════════════════════════════════════════════════════════════ -->
+<script type="module">
+
+  // ┌──────────────────────────────────────────────────────────────────┐
+  // │  REPLACE THIS BLOCK WITH YOUR FIREBASE PROJECT CONFIG            │
+  // └──────────────────────────────────────────────────────────────────┘
+const firebaseConfig = {
+  apiKey: "AIzaSyA8v7ojdxSoW_zZhNWSZlUITW5KoRu_bqg",
+  authDomain: "pendam-santai.firebaseapp.com",
+  databaseURL: "https://pendam-santai-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "pendam-santai",
+  storageBucket: "pendam-santai.firebasestorage.app",
+  messagingSenderId: "1071000803831",
+  appId: "1:1071000803831:web:56c24629b6fd654b65f6f2",
+  measurementId: "G-TLT99SPE6Q"
+};
+
+
+  import { initializeApp }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getDatabase, ref, set, remove, get, onValue }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+  if (firebaseConfig.apiKey === 'YOUR_API_KEY') {
+    document.getElementById('cfg-banner').style.display = 'block';
+  }
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getDatabase(app);
+  const gp   = new GoogleAuthProvider();
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let me           = null;           // Firebase user
+  let allUsers     = {};             // uid → { name, email, photoURL }
+  let availability = {};             // YYYY-MM-DD → { uid: true, … }
+  let activeView   = 'availability';
+  let selectedDate = todayStr();
+
+  let avYear = new Date().getFullYear(), avMonth = new Date().getMonth();
+  let htYear = new Date().getFullYear(), htMonth = new Date().getMonth();
+
+  // ── Auth ───────────────────────────────────────────────────────────────────
+  document.getElementById('signin-btn').addEventListener('click', () =>
+    signInWithPopup(auth, gp).catch(e => alert('Sign-in error: ' + e.message))
+  );
+  document.getElementById('signout-btn').addEventListener('click', () => signOut(auth));
+
+  onAuthStateChanged(auth, async user => {
+    me = user;
+    if (user) {
+      await set(ref(db, `users/${user.uid}`), {
+        name:     user.displayName || user.email,
+        email:    user.email,
+        photoURL: user.photoURL || ''
+      });
+      bootApp();
+      subscribeData();
+    } else {
+      document.getElementById('login-view').style.display  = '';
+      document.getElementById('app-view').style.display    = 'none';
+    }
+  });
+
+  function bootApp() {
+    document.getElementById('login-view').style.display  = 'none';
+    document.getElementById('app-view').style.display    = 'block';
+    // Populate header + sidebar with user info
+    const name  = me.displayName || me.email;
+    const inits = getInitials(name);
+    document.getElementById('sb-name').textContent  = name;
+    document.getElementById('sb-email').textContent = me.email;
+    document.getElementById('sb-initials').textContent  = inits;
+    document.getElementById('hdr-initials').textContent = inits;
+    if (me.photoURL) {
+      document.getElementById('sb-photo').src  = me.photoURL;
+      document.getElementById('hdr-photo').src = me.photoURL;
+    }
+    goView('availability');
+  }
+
+  // ── Data subscription ──────────────────────────────────────────────────────
+  function subscribeData() {
+    onValue(ref(db, 'users'), snap => {
+      allUsers = snap.val() || {};
+      redraw();
+    });
+    onValue(ref(db, 'availability'), snap => {
+      availability = snap.val() || {};
+      redraw();
+    });
+  }
+
+  async function toggleDay(dateStr) {
+    if (!me) return;
+    const r = ref(db, `availability/${dateStr}/${me.uid}`);
+    const snap = await get(r);
+    if (snap.exists()) await remove(r); else await set(r, true);
+  }
+
+  // ── Navigation ─────────────────────────────────────────────────────────────
+  document.querySelectorAll('.nav-link, .mob-nav').forEach(el =>
+    el.addEventListener('click', () => goView(el.dataset.view))
+  );
+
+  function goView(name) {
+    activeView = name;
+    ['availability', 'heatmap', 'daily'].forEach(v => {
+      const el = document.getElementById(v + '-view');
+      el.style.display = v === name ? 'flex' : 'none';
+    });
+    // Sidebar active state
+    document.querySelectorAll('.nav-link').forEach(el => {
+      const on = el.dataset.view === name;
+      el.style.color      = on ? '#f2be8c' : '#9c8e82';
+      el.style.background = on ? '#1f1f20' : '';
+      el.style.fontWeight = on ? '700' : '';
+    });
+    // Mobile nav active state
+    document.querySelectorAll('.mob-nav').forEach(el => {
+      el.style.color = el.dataset.view === name ? '#f2be8c' : '#9c8e82';
+    });
+    redraw();
+  }
+
+  function redraw() {
+    if (activeView === 'availability') renderAvail();
+    if (activeView === 'heatmap')      renderHeatmap();
+    if (activeView === 'daily')        renderDaily();
+  }
+
+  // ── MY AVAILABILITY ────────────────────────────────────────────────────────
+  document.getElementById('av-prev').addEventListener('click', () => {
+    avMonth--; if (avMonth < 0) { avMonth = 11; avYear--; } renderAvail();
+  });
+  document.getElementById('av-next').addEventListener('click', () => {
+    avMonth++; if (avMonth > 11) { avMonth = 0; avYear++; } renderAvail();
+  });
+
+  function renderAvail() {
+    document.getElementById('av-month').textContent = MONTHS[avMonth];
+    document.getElementById('av-year').textContent  = avYear;
+    renderAvailGrid();
+    renderUpcoming();
+    renderAvailStatus();
+  }
+
+  function renderAvailGrid() {
+    const grid   = document.getElementById('av-grid');
+    grid.innerHTML = '';
+    const todStr = todayStr();
+    const days   = daysInMonth(avYear, avMonth);
+    const offset = mondayOffset(avYear, avMonth);
+
+    for (let i = 0; i < offset; i++) grid.appendChild(emptyCell());
+
+    for (let d = 1; d <= days; d++) {
+      const ds      = fmt(avYear, avMonth, d);
+      const dow     = new Date(avYear, avMonth, d).getDay();
+      const weekend = dow === 0 || dow === 6;
+      const past    = ds < todStr;
+      const today   = ds === todStr;
+      const free    = !!(availability[ds] && availability[ds][me?.uid]);
+
+      const btn = document.createElement(past || weekend ? 'div' : 'button');
+      btn.className = 'day-cell';
+
+      if (free) {
+        btn.style.background = '#2a2a2b';
+        btn.style.outline    = '1px solid rgba(242,190,140,0.5)';
+        btn.style.outlineOffset = '-1px';
+      } else if (today) {
+        btn.style.background = '#1f1f20';
+        btn.style.outline    = '1px solid #9c8e82';
+        btn.style.outlineOffset = '-1px';
+      } else {
+        btn.style.background = weekend ? 'transparent' : '#1f1f20';
+      }
+      if (past || weekend) btn.style.opacity = weekend ? '0.25' : '0.3';
+
+      const numEl = document.createElement('span');
+      numEl.className  = 'text-sm md:text-base font-headline font-bold';
+      numEl.style.color = free ? '#f2be8c' : today ? '#e5e2e3' : '#d4c4b7';
+      numEl.textContent = d;
+      btn.appendChild(numEl);
+
+      if (free) {
+        const lbl = document.createElement('span');
+        lbl.className   = 'text-[7px] md:text-[8px] uppercase tracking-tighter font-bold mt-0.5';
+        lbl.style.color = 'rgba(242,190,140,0.7)';
+        lbl.textContent = 'Free';
+        btn.appendChild(lbl);
+      } else if (!past && !weekend) {
+        const dot = document.createElement('span');
+        dot.className = 'w-1 h-1 rounded-full mt-1';
+        dot.style.background = '#c1ce91';
+        dot.style.boxShadow  = '0 0 6px #c1ce91';
+        btn.appendChild(dot);
+      }
+
+      if (!past && !weekend) {
+        btn.style.cursor = 'pointer';
+        btn.addEventListener('click', () => toggleDay(ds));
+      }
+
+      grid.appendChild(btn);
+    }
+  }
+
+  function renderUpcoming() {
+    const el  = document.getElementById('av-upcoming');
+    el.innerHTML = '';
+    const tod = todayStr();
+    const my  = Object.entries(availability)
+      .filter(([d, data]) => d >= tod && data[me?.uid])
+      .map(([d]) => d).sort().slice(0, 5);
+
+    if (!my.length) {
+      el.innerHTML = '<p class="text-sm text-outline italic">No upcoming free days yet.</p>';
+      return;
+    }
+    my.forEach((ds, i) => {
+      const d = new Date(ds + 'T12:00:00');
+      const row = document.createElement('div');
+      row.className = `flex items-center gap-4 py-3 ${i < my.length - 1 ? 'border-b border-outline-variant/10' : ''}`;
+      row.innerHTML = `
+        <div class="w-10 text-center flex-shrink-0">
+          <span class="block text-lg font-headline font-bold text-on-surface">${d.getDate()}</span>
+          <span class="text-[9px] uppercase tracking-widest text-outline">${MONTHS_S[d.getMonth()]}</span>
+        </div>
+        <div class="flex-grow">
+          <p class="text-sm font-bold text-on-surface">${DAYS_F[d.getDay()]}</p>
+          <p class="text-[10px] text-on-surface-variant font-medium uppercase tracking-wide">Available</p>
+        </div>
+        <span class="material-symbols-outlined text-primary icon-fill text-lg" style="font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24">check_circle</span>
+      `;
+      el.appendChild(row);
+    });
+  }
+
+  function renderAvailStatus() {
+    const tod = todayStr();
+    const cnt = Object.entries(availability).filter(([d, data]) => d >= tod && data[me?.uid]).length;
+    const txt = document.getElementById('av-status-txt');
+    const sub = document.getElementById('av-status-sub');
+    if (!cnt) {
+      txt.textContent = 'No free days set';
+      sub.textContent = 'Click any future weekday to mark yourself available.';
+    } else {
+      txt.textContent = `${cnt} free day${cnt > 1 ? 's' : ''} upcoming`;
+      sub.textContent = 'Your availability is synced with the team heatmap.';
+    }
+  }
+
+  // ── TEAM HEATMAP ──────────────────────────────────────────────────────────
+  document.getElementById('ht-prev').addEventListener('click', () => {
+    htMonth--; if (htMonth < 0) { htMonth = 11; htYear--; } renderHeatmap();
+  });
+  document.getElementById('ht-next').addEventListener('click', () => {
+    htMonth++; if (htMonth > 11) { htMonth = 0; htYear++; } renderHeatmap();
+  });
+
+  function renderHeatmap() {
+    document.getElementById('ht-month').textContent = MONTHS[htMonth];
+    document.getElementById('ht-year').textContent  = htYear;
+    renderHeatGrid();
+    renderHeatInsight();
+    renderBandwidthList();
+  }
+
+  function renderHeatGrid() {
+    const grid   = document.getElementById('ht-grid');
+    grid.innerHTML = '';
+    const todStr = todayStr();
+    const days   = daysInMonth(htYear, htMonth);
+    const offset = mondayOffset(htYear, htMonth);
+    const team   = Math.max(Object.keys(allUsers).length, 1);
+
+    let maxCount = 0, bestDate = null;
+    for (let d = 1; d <= days; d++) {
+      const ds  = fmt(htYear, htMonth, d);
+      const dow = new Date(htYear, htMonth, d).getDay();
+      if (dow === 0 || dow === 6) continue;
+      const c = Object.keys(availability[ds] || {}).length;
+      if (c > maxCount) { maxCount = c; bestDate = ds; }
+    }
+
+    for (let i = 0; i < offset; i++) grid.appendChild(emptyCell());
+
+    for (let d = 1; d <= days; d++) {
+      const ds      = fmt(htYear, htMonth, d);
+      const dow     = new Date(htYear, htMonth, d).getDay();
+      const weekend = dow === 0 || dow === 6;
+      const past    = ds < todStr;
+      const count   = Object.keys(availability[ds] || {}).length;
+      const isSync  = !weekend && maxCount >= 2 && count === maxCount;
+
+      const cell = document.createElement('button');
+      cell.className = 'heat-cell';
+
+      if (isSync) {
+        cell.style.background  = '#f2be8c';
+        cell.style.boxShadow   = '0 0 16px rgba(242,190,140,0.3)';
+        cell.style.outline     = '2px solid rgba(242,190,140,0.3)';
+        cell.style.outlineOffset = '2px';
+      } else if (weekend || past) {
+        cell.style.background = '#0e0e0f';
+      } else {
+        cell.style.background = heatColor(count, team);
+      }
+
+      const numEl = document.createElement('span');
+      numEl.style.fontSize  = 'clamp(9px, 2vw, 12px)';
+      numEl.style.fontFamily = 'Manrope, sans-serif';
+      numEl.style.fontWeight = '700';
+      numEl.style.color = isSync ? '#482904' : (weekend || past ? '#353436' : '#e5e2e3');
+      numEl.textContent = d;
+      cell.appendChild(numEl);
+
+      if (isSync) {
+        const lbl = document.createElement('span');
+        lbl.style.cssText = 'font-size:7px;font-weight:900;text-transform:uppercase;color:#482904;letter-spacing:-0.02em';
+        lbl.textContent = 'Sync';
+        cell.appendChild(lbl);
+      } else if (count > 0 && !weekend) {
+        const cnt = document.createElement('span');
+        cnt.style.cssText = `font-size:7px;font-weight:700;color:${isSync ? '#482904' : '#9c8e82'}`;
+        cnt.textContent = count;
+        cell.appendChild(cnt);
+      }
+
+      cell.addEventListener('click', () => { selectedDate = ds; goView('daily'); });
+      grid.appendChild(cell);
+    }
+  }
+
+  function renderHeatInsight() {
+    const team  = Math.max(Object.keys(allUsers).length, 1);
+    const days  = daysInMonth(htYear, htMonth);
+    let maxCount = 0, bestDate = null;
+
+    for (let d = 1; d <= days; d++) {
+      const ds  = fmt(htYear, htMonth, d);
+      const dow = new Date(htYear, htMonth, d).getDay();
+      if (dow === 0 || dow === 6) continue;
+      const c = Object.keys(availability[ds] || {}).length;
+      if (c > maxCount) { maxCount = c; bestDate = ds; }
+    }
+
+    if (bestDate) {
+      const bd   = new Date(bestDate + 'T12:00:00');
+      const pct  = Math.round((maxCount / team) * 100);
+      document.getElementById('sp-date').textContent    = `${MONTHS[bd.getMonth()]} ${bd.getDate()}`;
+      document.getElementById('sp-desc').textContent    = `${maxCount} of ${team} available — best overlap this month.`;
+      document.getElementById('sp-pct').textContent     = `${pct}%`;
+      document.getElementById('sp-bar').style.width     = `${pct}%`;
+      document.getElementById('sp-insight').textContent = maxCount >= 2
+        ? `"${maxCount} people free on the ${ordinal(bd.getDate())} — ideal window for a sync."`
+        : '"Mark more days to discover team overlap."';
+
+      const ac = document.getElementById('sp-avatars');
+      ac.innerHTML = '';
+      Object.keys(availability[bestDate] || {}).slice(0, 5).forEach(uid => {
+        const u = allUsers[uid]; if (!u) return;
+        const av = document.createElement('div');
+        av.style.cssText = 'width:36px;height:36px;border-radius:50%;border:2px solid #1f1f20;overflow:hidden;flex-shrink:0;background:#353436;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#f2be8c;';
+        if (u.photoURL) {
+          av.innerHTML = `<img src="${u.photoURL}" style="width:100%;height:100%;object-fit:cover" alt="${u.name}"/>`;
+        } else {
+          av.textContent = getInitials(u.name);
+        }
+        ac.appendChild(av);
+      });
+
+      const btn = document.getElementById('sp-btn');
+      btn.style.display = 'block';
+      btn.onclick = () => { selectedDate = bestDate; goView('daily'); };
+    } else {
+      document.getElementById('sp-date').textContent = '–';
+      document.getElementById('sp-desc').textContent = 'No availability data yet for this month.';
+      document.getElementById('sp-pct').textContent  = '–';
+      document.getElementById('sp-bar').style.width  = '0%';
+      document.getElementById('sp-insight').textContent = 'Mark your availability to see team overlap.';
+      document.getElementById('sp-btn').style.display   = 'none';
+      document.getElementById('sp-avatars').innerHTML   = '';
+    }
+  }
+
+  function renderBandwidthList() {
+    const el   = document.getElementById('ht-list');
+    el.innerHTML = '';
+    const team = Math.max(Object.keys(allUsers).length, 1);
+    const days = daysInMonth(htYear, htMonth);
+
+    const candidates = [];
+    for (let d = 1; d <= days; d++) {
+      const ds  = fmt(htYear, htMonth, d);
+      const dow = new Date(htYear, htMonth, d).getDay();
+      if (dow === 0 || dow === 6) continue;
+      const c = Object.keys(availability[ds] || {}).length;
+      if (c >= 2) candidates.push({ ds, c });
+    }
+    candidates.sort((a, b) => b.c - a.c);
+
+    if (!candidates.length) {
+      el.innerHTML = '<p class="text-sm text-outline italic px-1">No days with 2+ people free yet.</p>';
+      return;
+    }
+
+    candidates.slice(0, 4).forEach(({ ds, c }, i) => {
+      const d    = new Date(ds + 'T12:00:00');
+      const top  = i === 0;
+      const row  = document.createElement('div');
+      row.className = 'group flex items-center justify-between p-4 md:p-5 bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer rounded-lg';
+      row.innerHTML = `
+        <div class="flex items-center gap-4">
+          <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-xl font-bold text-sm"
+            style="background:${top ? '#f2be8c' : '#353436'};color:${top ? '#482904' : '#e5e2e3'}">
+            ${d.getDate()}
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-on-surface">${top ? 'The Sync Point' : DAYS_F[d.getDay()]}</h4>
+            <p class="text-xs text-outline">${c} member${c !== 1 ? 's' : ''} · ${DAYS_F[d.getDay()]}, ${MONTHS_S[d.getMonth()]} ${d.getDate()}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 md:gap-8">
+          <div class="hidden sm:flex flex-col items-end">
+            <span class="text-[10px] font-bold uppercase tracking-widest" style="color:${top ? '#c1ce91' : '#9c8e82'}">${top ? 'High Overlap' : 'Available'}</span>
+            <span class="text-xs text-outline">${c}/${team} free</span>
+          </div>
+          <span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
+        </div>
+      `;
+      row.addEventListener('click', () => { selectedDate = ds; goView('daily'); });
+      el.appendChild(row);
+    });
+  }
+
+  // ── DAILY DETAIL ──────────────────────────────────────────────────────────
+  document.getElementById('dd-prev').addEventListener('click', () => {
+    const d = new Date(selectedDate + 'T12:00:00'); d.setDate(d.getDate() - 1);
+    selectedDate = fmtFromDate(d); renderDaily();
+  });
+  document.getElementById('dd-next').addEventListener('click', () => {
+    const d = new Date(selectedDate + 'T12:00:00'); d.setDate(d.getDate() + 1);
+    selectedDate = fmtFromDate(d); renderDaily();
+  });
+  document.getElementById('dd-today').addEventListener('click', () => {
+    selectedDate = todayStr(); renderDaily();
+  });
+
+  function renderDaily() {
+    const d       = new Date(selectedDate + 'T12:00:00');
+    const dayData = availability[selectedDate] || {};
+    const freeIds = Object.keys(dayData);
+    const allIds  = Object.keys(allUsers);
+    const unsetIds = allIds.filter(uid => !dayData[uid]);
+
+    document.getElementById('dd-dayname').textContent = DAYS_F[d.getDay()];
+    document.getElementById('dd-datestr').textContent = `${MONTHS_S[d.getMonth()]} ${d.getDate()}`;
+    document.getElementById('dd-free').textContent    = freeIds.length;
+    document.getElementById('dd-unset').textContent   = unsetIds.length;
+
+    renderColleagues(freeIds, unsetIds);
+    renderTimeDist(freeIds);
+    renderBrew(freeIds, unsetIds, d);
+  }
+
+  function renderColleagues(freeIds, unsetIds) {
+    const el = document.getElementById('dd-list');
+    el.innerHTML = '';
+    const ordered = [...freeIds.map(u => [u, true]), ...unsetIds.map(u => [u, false])];
+    if (!ordered.length) {
+      el.innerHTML = '<p class="text-sm text-outline italic px-1">No team members registered yet.</p>';
+      return;
+    }
+    ordered.forEach(([uid, isFree]) => {
+      const u  = allUsers[uid]; if (!u) return;
+      const isMe = uid === me?.uid;
+      const card = document.createElement('div');
+      card.className = 'group bg-surface-container-low hover:bg-surface-container transition-all p-4 md:p-5 rounded-xl flex items-center justify-between';
+
+      const photoEl = u.photoURL
+        ? `<img src="${u.photoURL}" style="width:100%;height:100%;object-fit:cover" alt="${u.name}"/>`
+        : `<span style="font-size:12px;font-weight:700;color:#f2be8c">${getInitials(u.name)}</span>`;
+
+      card.innerHTML = `
+        <div class="flex items-center gap-3 md:gap-4">
+          <div class="relative">
+            <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;background:#353436;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              ${photoEl}
+            </div>
+            <div style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;border:2px solid #1b1b1c;background:${isFree ? '#c1ce91' : '#50453b'};box-shadow:${isFree ? '0 0 8px #c1ce91' : 'none'}"></div>
+          </div>
+          <div>
+            <h4 class="font-headline font-bold text-on-surface text-sm md:text-base">
+              ${u.name}${isMe ? ' <span style="color:rgba(242,190,140,0.5);font-size:11px;font-weight:400">(you)</span>' : ''}
+            </h4>
+            <p class="text-xs text-on-surface-variant">${u.email}</p>
+          </div>
+        </div>
+        <div class="hidden sm:block">
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:${isFree ? '#c1ce91' : '#9c8e82'}">
+            ${isFree ? 'Free All Day' : 'Unset'}
+          </span>
+        </div>
+      `;
+      el.appendChild(card);
+    });
+  }
+
+  function renderTimeDist(freeIds) {
+    const el = document.getElementById('dd-timedist');
+    el.innerHTML = '';
+    const BLOCKS = [
+      { label: 'Morning', time: '09:00' },
+      { label: 'Afternoon', time: '13:00' },
+      { label: 'Evening', time: '17:00' },
+    ];
+    BLOCKS.forEach(block => {
+      const freeUsers = freeIds.slice(0, 4).map(uid => allUsers[uid]).filter(Boolean);
+      const avatarHtml = freeUsers.map(u => `
+        <div style="width:28px;height:28px;border-radius:50%;border:2px solid #1f1f20;overflow:hidden;background:#353436;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#f2be8c;flex-shrink:0">
+          ${u.photoURL ? `<img src="${u.photoURL}" style="width:100%;height:100%;object-fit:cover"/>` : getInitials(u.name)}
+        </div>
+      `).join('');
+
+      const row = document.createElement('div');
+      row.className = 'flex justify-between items-center';
+      row.innerHTML = `
+        <div>
+          <span class="font-headline text-xl font-extrabold" style="color:${freeIds.length ? '#f2be8c' : 'rgba(229,226,227,0.2)'}">${block.time}</span>
+          <span class="block text-[10px] uppercase tracking-wider text-outline">${block.label}</span>
+        </div>
+        <div class="flex -space-x-2">${freeIds.length ? avatarHtml : '<span class="text-xs text-outline">—</span>'}</div>
+      `;
+      el.appendChild(row);
+    });
+  }
+
+  function renderBrew(freeIds, unsetIds, d) {
+    const name = DAYS_F[d.getDay()];
+    const msgs = [
+      `"${freeIds.length} team member${freeIds.length !== 1 ? 's' : ''} free on ${name}. ${freeIds.length >= 3 ? 'Great window for a planning session.' : 'Consider a focused 1:1.'}"`,
+      `"${name} shows ${freeIds.length} available, ${unsetIds.length} still unset. Good moment to nudge the stragglers."`,
+      `"Best collaboration window: early morning before the context-switching begins. ${freeIds.length} have cleared ${name}."`,
+    ];
+    document.getElementById('dd-brew').textContent = freeIds.length === 0
+      ? '"No one has marked themselves free for this day yet."'
+      : msgs[d.getDate() % msgs.length];
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  const MONTHS   = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const MONTHS_S = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DAYS_F   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  function todayStr() {
+    const d = new Date();
+    return fmt(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  function fmt(y, m, d) {
+    return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+  function fmtFromDate(d) { return fmt(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+  function mondayOffset(y, m) { return (new Date(y, m, 1).getDay() + 6) % 7; }
+  function emptyCell() { const d = document.createElement('div'); d.style.aspectRatio = '1/1'; return d; }
+  function getInitials(name) {
+    if (!name) return '?';
+    const p = name.trim().split(/\s+/);
+    return p.length >= 2 ? (p[0][0] + p[p.length - 1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
+  }
+  function ordinal(n) {
+    const s = ['th','st','nd','rd'], v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+  function heatColor(count, team) {
+    if (count === 0) return '#1b1b1c';
+    const r = count / team;
+    if (r <= 0.2)  return 'rgba(212,163,115,0.10)';
+    if (r <= 0.45) return 'rgba(212,163,115,0.28)';
+    if (r <= 0.7)  return 'rgba(212,163,115,0.55)';
+    return '#f2be8c';
+  }
+
+</script>
+</body>
+</html>
