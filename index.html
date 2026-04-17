@@ -104,6 +104,12 @@
     @media(max-width:767px) {
       .mob-section { padding-top: 1rem; padding-bottom: 1rem; gap: 1rem; }
     }
+
+    /* Mobile drawer */
+    #mob-drawer { position:fixed; left:0; top:0; height:100vh; width:280px; background:#0e0e0f; z-index:500; transform:translateX(-100%); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; border-right:1px solid rgba(80,69,59,0.2); }
+    #mob-drawer.open { transform:translateX(0); }
+    #mob-drawer-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:499; display:none; backdrop-filter:blur(2px); }
+    #mob-drawer-backdrop.open { display:block; }
   </style>
 </head>
 <body class="dark min-h-screen">
@@ -148,21 +154,40 @@
           Sebab "Next Week On..", "Plan Ah..", "Jom.." Selalu Scam.
         </p>
       </div>
+      <!-- Mobile: single image strip + quote -->
+      <div class="relative md:hidden mt-4">
+        <div class="flex gap-3 h-40">
+          <div class="flex-1 rounded-xl overflow-hidden bg-surface-container-low border border-white/5 relative">
+            <img id="login-img-left" class="w-full h-full object-cover grayscale contrast-125 opacity-50" src="" alt=""/>
+            <div class="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-transparent"></div>
+          </div>
+          <div class="flex-1 rounded-xl overflow-hidden bg-surface-container-low border border-white/5 relative">
+            <img id="login-img-right" class="w-full h-full object-cover grayscale contrast-110 opacity-50" src="" alt=""/>
+            <div class="absolute inset-0 bg-gradient-to-l from-background/60 via-transparent to-transparent"></div>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center gap-4">
+          <div class="h-[1px] w-10 bg-outline-variant"></div>
+          <span id="login-quote" class="text-[9px] font-label uppercase tracking-[0.3em] text-outline"></span>
+        </div>
+      </div>
+
+      <!-- Desktop: staggered two-column layout -->
       <div class="relative hidden md:block">
         <div class="absolute -top-12 -left-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl"></div>
         <div class="grid grid-cols-2 gap-6">
           <div class="aspect-[4/5] rounded-xl overflow-hidden bg-surface-container-low border border-white/5 relative group">
-            <img id="login-img-left" class="w-full h-full object-cover grayscale contrast-125 opacity-40 group-hover:opacity-60 transition-opacity duration-700" src="" alt=""/>
+            <img id="login-img-left-d" class="w-full h-full object-cover grayscale contrast-125 opacity-40 group-hover:opacity-60 transition-opacity duration-700" src="" alt=""/>
             <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60"></div>
           </div>
           <div class="aspect-[4/5] mt-16 rounded-xl overflow-hidden bg-surface-container-low border border-white/5 relative group">
-            <img id="login-img-right" class="w-full h-full object-cover grayscale contrast-110 opacity-40 group-hover:opacity-60 transition-opacity duration-700" src="" alt=""/>
+            <img id="login-img-right-d" class="w-full h-full object-cover grayscale contrast-110 opacity-40 group-hover:opacity-60 transition-opacity duration-700" src="" alt=""/>
             <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60"></div>
           </div>
         </div>
         <div class="mt-10 flex items-center gap-6">
           <div class="h-[1px] w-16 bg-outline-variant"></div>
-          <span id="login-quote" class="text-[10px] font-label uppercase tracking-[0.4em] text-outline"></span>
+          <span id="login-quote-d" class="text-[10px] font-label uppercase tracking-[0.4em] text-outline"></span>
         </div>
       </div>
     </div>
@@ -252,7 +277,12 @@
 
     <!-- Header -->
     <header class="sticky top-0 z-40 bg-background/95 backdrop-blur-md flex justify-between items-center px-5 md:px-8 py-4 md:py-5 border-b border-outline-variant/10">
-      <h1 class="font-headline text-lg md:text-2xl font-bold tracking-tighter text-primary">Pendam.سانتاي</h1>
+      <div class="flex items-center gap-3">
+        <button id="mob-menu-btn" class="md:hidden text-outline hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-surface-container -ml-1">
+          <span class="material-symbols-outlined text-2xl">menu</span>
+        </button>
+        <h1 class="font-headline text-lg md:text-2xl font-bold tracking-tighter text-primary">Pendam.سانتاي</h1>
+      </div>
       <div class="flex items-center gap-3 md:gap-4">
         <div class="relative">
           <button id="notif-btn" class="text-outline hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container">
@@ -590,6 +620,53 @@
     <div id="pb-list" class="px-5 pb-3 flex flex-wrap gap-2 max-h-36 overflow-y-auto"></div>
   </div>
 
+<!-- Mobile drawer backdrop -->
+<div id="mob-drawer-backdrop"></div>
+
+<!-- Mobile drawer -->
+<div id="mob-drawer">
+  <div class="flex items-center justify-between px-5 py-5 border-b border-outline-variant/10">
+    <span class="text-primary font-black uppercase tracking-[0.1em] text-xs">Pendam</span>
+    <button id="mob-drawer-close" class="text-outline hover:text-primary p-1 rounded-lg hover:bg-surface-container transition-colors">
+      <span class="material-symbols-outlined text-xl">close</span>
+    </button>
+  </div>
+  <nav class="flex flex-col gap-1 p-3 flex-grow">
+    <a class="mob-drawer-link flex items-center gap-3 px-4 py-3 rounded-lg text-outline transition-all cursor-pointer" data-view="availability">
+      <span class="material-symbols-outlined text-xl">person_check</span>
+      <span class="text-sm font-bold tracking-wide">My Free Days</span>
+    </a>
+    <a class="mob-drawer-link flex items-center gap-3 px-4 py-3 rounded-lg text-outline transition-all cursor-pointer" data-view="heatmap">
+      <span class="material-symbols-outlined text-xl">calendar_view_month</span>
+      <span class="text-sm font-bold tracking-wide">Gang Heatmap</span>
+    </a>
+    <a class="mob-drawer-link flex items-center gap-3 px-4 py-3 rounded-lg text-outline transition-all cursor-pointer" data-view="daily">
+      <span class="material-symbols-outlined text-xl">schedule</span>
+      <span class="text-sm font-bold tracking-wide">Who's Free</span>
+    </a>
+    <a class="mob-drawer-link flex items-center gap-3 px-4 py-3 rounded-lg text-outline transition-all cursor-pointer" data-view="sessions">
+      <span class="material-symbols-outlined text-xl">celebration</span>
+      <span class="text-sm font-bold tracking-wide">Lepak Sessions</span>
+    </a>
+  </nav>
+  <div class="p-4 border-t border-outline-variant/10">
+    <div class="flex items-center gap-3 px-2 mb-3">
+      <div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30 flex-shrink-0 bg-surface-container flex items-center justify-center">
+        <img id="drawer-photo" class="w-full h-full object-cover" src="" alt="" onerror="this.style.display='none';document.getElementById('drawer-initials').style.display='flex'"/>
+        <span id="drawer-initials" style="display:none" class="text-[10px] font-bold text-primary w-full h-full flex items-center justify-center"></span>
+      </div>
+      <div class="flex flex-col min-w-0">
+        <span id="drawer-name" class="text-xs font-bold text-on-surface truncate"></span>
+        <span id="drawer-email" class="text-[10px] text-outline truncate"></span>
+      </div>
+    </div>
+    <button id="drawer-signout-btn" class="w-full flex items-center gap-3 px-4 py-2.5 text-outline hover:text-primary transition-all text-sm rounded-lg hover:bg-surface-container/60">
+      <span class="material-symbols-outlined text-base">logout</span>
+      Sign out
+    </button>
+  </div>
+</div>
+
 </div><!-- /app-view -->
 
 <!-- ── Lepak Creation Modal ────────────────────────────────────────────────── -->
@@ -655,8 +732,10 @@ const firebaseConfig = {
     '"Roastaaa" - Fir, 2011',
     '"Charcothhhhh" - Sufi, 2011',
   ];
-  document.getElementById('login-quote').textContent =
-    LOGIN_QUOTES[Math.floor(Math.random() * LOGIN_QUOTES.length)];
+  const pickedQuote = LOGIN_QUOTES[Math.floor(Math.random() * LOGIN_QUOTES.length)];
+  ['login-quote', 'login-quote-d'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = pickedQuote;
+  });
 
   // ── Login images — add your own URLs below, two will be picked at random ──
   const LOGIN_IMAGES = [
@@ -672,8 +751,9 @@ const firebaseConfig = {
   ];
   (() => {
     const shuffled = [...LOGIN_IMAGES].sort(() => Math.random() - 0.5);
-    document.getElementById('login-img-left').src  = shuffled[0] || '';
-    document.getElementById('login-img-right').src = shuffled[1] || shuffled[0] || '';
+    const l = shuffled[0] || '', r = shuffled[1] || shuffled[0] || '';
+    ['login-img-left', 'login-img-left-d'].forEach(id => { const e = document.getElementById(id); if (e) e.src = l; });
+    ['login-img-right', 'login-img-right-d'].forEach(id => { const e = document.getElementById(id); if (e) e.src = r; });
   })();
 
   const app  = initializeApp(firebaseConfig);
@@ -731,9 +811,13 @@ const firebaseConfig = {
     document.getElementById('sb-email').textContent     = me.email;
     document.getElementById('sb-initials').textContent  = inits;
     document.getElementById('hdr-initials').textContent = inits;
+    document.getElementById('drawer-name').textContent  = name;
+    document.getElementById('drawer-email').textContent = me.email;
+    document.getElementById('drawer-initials').textContent = inits;
     if (me.photoURL) {
-      document.getElementById('sb-photo').src  = me.photoURL;
-      document.getElementById('hdr-photo').src = me.photoURL;
+      document.getElementById('sb-photo').src     = me.photoURL;
+      document.getElementById('hdr-photo').src    = me.photoURL;
+      document.getElementById('drawer-photo').src = me.photoURL;
     }
     goView('availability');
   }
@@ -772,6 +856,23 @@ const firebaseConfig = {
     el.addEventListener('click', () => goView(el.dataset.view))
   );
 
+  // Mobile drawer
+  function openDrawer() {
+    document.getElementById('mob-drawer').classList.add('open');
+    document.getElementById('mob-drawer-backdrop').classList.add('open');
+  }
+  function closeDrawer() {
+    document.getElementById('mob-drawer').classList.remove('open');
+    document.getElementById('mob-drawer-backdrop').classList.remove('open');
+  }
+  document.getElementById('mob-menu-btn').addEventListener('click', openDrawer);
+  document.getElementById('mob-drawer-close').addEventListener('click', closeDrawer);
+  document.getElementById('mob-drawer-backdrop').addEventListener('click', closeDrawer);
+  document.getElementById('drawer-signout-btn').addEventListener('click', () => { closeDrawer(); signOut(auth); });
+  document.querySelectorAll('.mob-drawer-link').forEach(el =>
+    el.addEventListener('click', () => { goView(el.dataset.view); closeDrawer(); })
+  );
+
   function goView(name) {
     activeView = name;
     ['availability', 'heatmap', 'daily', 'sessions'].forEach(v => {
@@ -787,6 +888,11 @@ const firebaseConfig = {
       const on = el.dataset.view === name;
       el.style.color = on ? '#f2be8c' : '#9c8e82';
       el.classList.toggle('mob-active', on);
+    });
+    document.querySelectorAll('.mob-drawer-link').forEach(el => {
+      const on = el.dataset.view === name;
+      el.style.color      = on ? '#f2be8c' : '#9c8e82';
+      el.style.background = on ? '#1f1f20' : '';
     });
     redraw();
   }
