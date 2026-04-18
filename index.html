@@ -488,8 +488,8 @@
       <div class="md:hidden">
         <div class="flex items-center justify-between mb-3">
           <div>
-            <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-outline">Who's Free Today</p>
-            <h2 class="font-headline text-xl font-extrabold tracking-tight text-on-surface leading-tight">
+            <p id="dd-label" class="text-[9px] font-bold uppercase tracking-[0.2em] text-outline">Who's Free</p>
+            <h2 id="dd-headline" class="font-headline text-xl font-extrabold tracking-tight text-on-surface leading-tight">
               <span id="dd-dayname"></span>, <span class="text-primary/50" id="dd-datestr"></span>
             </h2>
           </div>
@@ -520,8 +520,8 @@
       <!-- Desktop: editorial header -->
       <div class="hidden md:flex md:flex-row md:items-end justify-between gap-6">
         <div>
-          <p class="text-primary font-label text-xs tracking-[0.2em] uppercase mb-2 font-bold">Checking out</p>
-          <h2 class="font-headline text-7xl font-extrabold tracking-tighter text-on-surface leading-none">
+          <p id="dd-label-d" class="text-primary font-label text-xs tracking-[0.2em] uppercase mb-2 font-bold">Checking out</p>
+          <h2 id="dd-headline-d" class="font-headline text-7xl font-extrabold tracking-tighter text-on-surface leading-none">
             <span id="dd-dayname-d"></span>,<br/><span class="text-primary/40" id="dd-datestr-d"></span>
           </h2>
         </div>
@@ -821,6 +821,7 @@ const firebaseConfig = {
   let notifPanelOpen    = false;
   let dataSubscribed    = false;
   let selectedLepakDate = null;
+  let activeLepakName   = null;
 
   // ── Auth ───────────────────────────────────────────────────────────────────
   document.getElementById('signin-btn').addEventListener('click', () =>
@@ -1558,27 +1559,27 @@ const firebaseConfig = {
   // ── DAILY DETAIL ──────────────────────────────────────────────────────────
   document.getElementById('dd-prev').addEventListener('click', () => {
     const d = new Date(selectedDate + 'T12:00:00'); d.setDate(d.getDate() - 1);
-    selectedDate = fmtFromDate(d); renderDaily();
+    selectedDate = fmtFromDate(d); activeLepakName = null; renderDaily();
   });
   document.getElementById('dd-next').addEventListener('click', () => {
     const d = new Date(selectedDate + 'T12:00:00'); d.setDate(d.getDate() + 1);
-    selectedDate = fmtFromDate(d); renderDaily();
+    selectedDate = fmtFromDate(d); activeLepakName = null; renderDaily();
   });
   document.getElementById('dd-today').addEventListener('click', () => {
-    selectedDate = todayStr(); renderDaily();
+    selectedDate = todayStr(); activeLepakName = null; renderDaily();
   });
 
   // Desktop daily nav
   document.querySelectorAll('.dd-prev-d').forEach(b => b.addEventListener('click', () => {
     const d = new Date(selectedDate + 'T12:00:00'); d.setDate(d.getDate() - 1);
-    selectedDate = fmtFromDate(d); renderDaily();
+    selectedDate = fmtFromDate(d); activeLepakName = null; renderDaily();
   }));
   document.querySelectorAll('.dd-next-d').forEach(b => b.addEventListener('click', () => {
     const d = new Date(selectedDate + 'T12:00:00'); d.setDate(d.getDate() + 1);
-    selectedDate = fmtFromDate(d); renderDaily();
+    selectedDate = fmtFromDate(d); activeLepakName = null; renderDaily();
   }));
   document.querySelectorAll('.dd-today-d').forEach(b => b.addEventListener('click', () => {
-    selectedDate = todayStr(); renderDaily();
+    selectedDate = todayStr(); activeLepakName = null; renderDaily();
   }));
 
   function setEl(id, val) { const e = document.getElementById(id); if (e) e.textContent = val; }
@@ -1602,6 +1603,25 @@ const firebaseConfig = {
     setEl('dd-datestr-d', dateStr);
     setEl('dd-free-d',    freeIds.length);
     setEl('dd-unset-d',   unsetIds.length);
+
+    // Lepak context header — swap label/headline when viewing a session
+    const mobLabel = document.getElementById('dd-label');
+    const mobHead  = document.getElementById('dd-headline');
+    const dskLabel = document.getElementById('dd-label-d');
+    const dskHead  = document.getElementById('dd-headline-d');
+    if (activeLepakName) {
+      // Mobile: event name as big headline, date as small sub
+      if (mobLabel) { mobLabel.textContent = `${dayName}, ${dateStr}`; mobLabel.className = 'text-[9px] font-bold uppercase tracking-[0.2em] text-outline'; }
+      if (mobHead)  { mobHead.innerHTML = `<span class="font-headline text-xl font-extrabold tracking-tight text-primary">${escHtml(activeLepakName)}</span>`; }
+      // Desktop: event name replaces giant day heading
+      if (dskLabel) { dskLabel.textContent = `${dayName}, ${dateStr}`; dskLabel.className = 'text-sm text-outline font-bold mb-2'; }
+      if (dskHead)  { dskHead.innerHTML = `<span class="font-headline text-4xl font-extrabold tracking-tighter text-primary">${escHtml(activeLepakName)}</span>`; }
+    } else {
+      if (mobLabel) { mobLabel.textContent = "Who's Free"; mobLabel.className = 'text-[9px] font-bold uppercase tracking-[0.2em] text-outline'; }
+      if (mobHead)  { mobHead.innerHTML = `<span id="dd-dayname">${dayName}</span>, <span class="text-primary/50" id="dd-datestr">${dateStr}</span>`; }
+      if (dskLabel) { dskLabel.textContent = 'Checking out'; dskLabel.className = 'text-primary font-label text-xs tracking-[0.2em] uppercase mb-2 font-bold'; }
+      if (dskHead)  { dskHead.innerHTML = `<span id="dd-dayname-d">${dayName}</span>,<br/><span class="text-primary/40" id="dd-datestr-d">${dateStr}</span>`; }
+    }
 
     renderColleagues(freeIds, unsetIds);
     renderTimeDist(freeIds);
@@ -1850,7 +1870,7 @@ const firebaseConfig = {
           </div>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
-          <button class="view-day-btn px-3 py-1.5 text-xs font-bold text-outline hover:text-primary border border-outline-variant/30 hover:border-primary/40 rounded-lg transition-all uppercase tracking-wider" data-date="${plan.date}">
+          <button class="view-day-btn px-3 py-1.5 text-xs font-bold text-outline hover:text-primary border border-outline-variant/30 hover:border-primary/40 rounded-lg transition-all uppercase tracking-wider" data-date="${plan.date}" data-name="${escHtml(plan.name)}">
             View
           </button>
           ${isCreator ? `<button class="del-plan-btn text-outline hover:text-error p-1.5 rounded-lg hover:bg-surface-container transition-all" data-id="${id}">
@@ -1862,7 +1882,11 @@ const firebaseConfig = {
     });
 
     el.querySelectorAll('.view-day-btn').forEach(btn =>
-      btn.addEventListener('click', () => { selectedDate = btn.dataset.date; goView('daily'); })
+      btn.addEventListener('click', () => {
+        selectedDate = btn.dataset.date;
+        activeLepakName = btn.dataset.name || null;
+        goView('daily');
+      })
     );
     el.querySelectorAll('.del-plan-btn').forEach(btn =>
       btn.addEventListener('click', async () => {
