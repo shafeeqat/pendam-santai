@@ -1060,10 +1060,15 @@ const firebaseConfig = {
         const uid = btn.dataset.uid, name = btn.dataset.name;
         if (!confirm(`Remove ${name} from Pendam? This will delete all their data.`)) return;
         btn.disabled = true; btn.textContent = 'Removing…';
-        await remove(ref(db, `users/${uid}`));
-        const avDates = Object.keys(availability);
-        await Promise.all(avDates.map(d => remove(ref(db, `availability/${d}/${uid}`))));
-        renderAdminMemberList();
+        try {
+          await remove(ref(db, `users/${uid}`));
+          const avDates = Object.keys(availability);
+          await Promise.all(avDates.map(d => remove(ref(db, `availability/${d}/${uid}`))));
+          renderAdminMemberList();
+        } catch (e) {
+          btn.disabled = false; btn.textContent = 'Remove';
+          alert('Failed: ' + e.message);
+        }
       })
     );
   }
