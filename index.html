@@ -412,7 +412,7 @@
             <span id="ht-month-d"></span> <span class="text-primary/40" id="ht-year-d"></span>
           </h2>
           <p class="text-on-surface-variant text-sm mt-2 max-w-md leading-relaxed">
-            Brighter = more people free. Dark = everyone menyibuk lah.
+            Brighter = more people free. Dark = people are busy on those days.
           </p>
         </div>
         <div class="flex items-center gap-3">
@@ -1350,7 +1350,7 @@ const firebaseConfig = {
       sub.textContent = 'Tap any future weekday to select, then confirm.';
     } else {
       txt.textContent = `${cnt} free day${cnt > 1 ? 's' : ''} upcoming`;
-      sub.textContent = 'Confirmed. Kawan-kawan boleh tengok dah.';
+      sub.textContent = 'Confirmed. Members can view your free days.';
     }
   }
 
@@ -1468,14 +1468,14 @@ const firebaseConfig = {
       const bd  = new Date(bestDate + 'T12:00:00');
       const pct = Math.round((maxCount / team) * 100);
       document.getElementById('sp-date').textContent    = `${MONTHS[bd.getMonth()]} ${bd.getDate()}`;
-      document.getElementById('sp-desc').textContent    = `${maxCount} of ${team} orang free — paling ramai bulan ni.`;
+      document.getElementById('sp-desc').textContent    = `${maxCount} of ${team} orang free — paling ramai for this month.`;
       document.getElementById('sp-pct').textContent     = `${pct}%`;
       document.getElementById('sp-bar').style.width     = `${pct}%`;
       const peak = getPeakTime(bestDate);
       const peakStr = peak ? ` Best time: ${peak.slot.charAt(0).toUpperCase()+peak.slot.slice(1)} (${peak.count} orang).` : '';
       document.getElementById('sp-insight').textContent = maxCount >= 2
         ? `"${maxCount} orang free on the ${ordinal(bd.getDate())}.${peakStr} Mcm boleh jadi je ni.."`
-        : '"Korg update dulu bila yg korg free."';
+        : '"Jgn lupa update bila korg free!"';
 
       const ac = document.getElementById('sp-avatars');
       ac.innerHTML = '';
@@ -1494,10 +1494,10 @@ const firebaseConfig = {
       btn.onclick = () => { selectedDate = bestDate; goView('daily'); };
     } else {
       document.getElementById('sp-date').textContent        = '–';
-      document.getElementById('sp-desc').textContent        = 'Takde data lagi. Semua orang busy ke?';
+      document.getElementById('sp-desc').textContent        = 'Takde data lagi. Semua busy ah tu..';
       document.getElementById('sp-pct').textContent         = '–';
       document.getElementById('sp-bar').style.width         = '0%';
-      document.getElementById('sp-insight').textContent     = 'Update free days korang dulu baru boleh tengok overlap.';
+      document.getElementById('sp-insight').textContent     = 'Update bile korg free dulu baru boleh tengok overlap.';
       document.getElementById('sp-btn').style.display       = 'none';
       document.getElementById('sp-avatars').innerHTML       = '';
     }
@@ -1690,7 +1690,7 @@ const firebaseConfig = {
   function renderBrew(freeIds, unsetIds, d) {
     const name = DAYS_F[d.getDay()];
     const msgs = [
-      `"Ada ${freeIds.length} orang free on ${name}. ${freeIds.length >= 3 ? 'Kasi jadi, jangan last minute cancel.' : freeIds.length >= 2 ? 'Sikit je lagi. Try paksa yang lain join.' : 'Sorang je? Sedih.'}"`,
+      `"Ada ${freeIds.length} orang free on ${name}. ${freeIds.length >= 3 ? 'Kasi jadi, jangan last minute paitao.' : freeIds.length >= 2 ? 'Try paksa yang lain join.' : 'Sorang je? Sedih.'}"`,
       `"${name}: ${freeIds.length} free, ${unsetIds.length} lagi belum update. Busy ke malas nak reply? Hmm.."`,
       `"${freeIds.length} orang dah confirm free ${name}."`,
     ];
